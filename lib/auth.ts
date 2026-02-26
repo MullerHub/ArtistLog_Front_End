@@ -21,6 +21,9 @@ export function removeToken(): void {
 /**
  * Decode the JWT payload and return a User object.
  * Returns null if no token is present or the payload is malformed.
+ *
+ * ⚠️  This only decodes the payload for reading display-level claims (role, email).
+ * Signature verification and all authorisation decisions MUST be enforced server-side.
  */
 export function getUser(): User | null {
   const token = getToken();

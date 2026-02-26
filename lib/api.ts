@@ -30,7 +30,11 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-/** On 401, clear credentials and redirect to login. */
+/** On 401, clear credentials and redirect to login.
+ *  window.location.href is intentional here: this interceptor runs outside React's
+ *  component tree, so Next.js router hooks are unavailable. The hard redirect also
+ *  ensures stale in-memory state is fully reset.
+ */
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
