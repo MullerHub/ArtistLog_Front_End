@@ -15,8 +15,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "ArtistLog | Connect Artists & Venues",
-  description: "Platform connecting artists with venues",
+  title: "ArtistLog | Conecte Artistas e Venues",
+  description: "Plataforma de conexão entre artistas e venues",
 };
 
 export default function RootLayout({

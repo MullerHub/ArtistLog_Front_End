@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { CommunityVenue } from '@/types';
 
-const INFRASTRUCTURE_OPTIONS = ['Stage', 'PA System', 'Lighting', 'Dressing Room', 'Parking'];
+const INFRASTRUCTURE_OPTIONS = ['Palco', 'Sistema de PA', 'Iluminação', 'Camarim', 'Estacionamento'];
 
 export interface CommunityVenueFormProps {
   onSuccess?: (venue: CommunityVenue) => void;
@@ -35,8 +35,8 @@ export function CommunityVenueForm({ onSuccess }: CommunityVenueFormProps) {
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!name.trim()) errs.name = 'Name is required.';
-    if (!city.trim()) errs.city = 'City is required.';
+    if (!name.trim()) errs.name = 'Nome é obrigatório.';
+    if (!city.trim()) errs.city = 'Cidade é obrigatória.';
     return errs;
   };
 
@@ -70,12 +70,12 @@ export function CommunityVenueForm({ onSuccess }: CommunityVenueFormProps) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
       {/* Name */}
       <div className="flex flex-col gap-1">
-        <Label htmlFor="cv_name">Venue Name *</Label>
+        <Label htmlFor="cv_name">Nome do Venue *</Label>
         <Input
           id="cv_name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Casa do Rock"
+          placeholder="ex.: Casa do Rock"
           aria-describedby={errors.name ? 'cv-name-error' : undefined}
           aria-required
         />
@@ -88,7 +88,7 @@ export function CommunityVenueForm({ onSuccess }: CommunityVenueFormProps) {
 
       {/* City */}
       <div className="flex flex-col gap-1">
-        <Label htmlFor="cv_city">City *</Label>
+        <Label htmlFor="cv_city">Cidade *</Label>
         <CitySearch
           value={city}
           onChange={setCity}
@@ -97,7 +97,7 @@ export function CommunityVenueForm({ onSuccess }: CommunityVenueFormProps) {
             setCity(parts[0] ?? cityName);
             setState(parts[1] ?? '');
           }}
-          placeholder="Search city…"
+          placeholder="Buscar cidade…"
         />
         {errors.city && (
           <p role="alert" className="text-xs text-red-600">
@@ -108,44 +108,44 @@ export function CommunityVenueForm({ onSuccess }: CommunityVenueFormProps) {
 
       {/* State */}
       <div className="flex flex-col gap-1">
-        <Label htmlFor="cv_state">State</Label>
+        <Label htmlFor="cv_state">Estado</Label>
         <Input
           id="cv_state"
           value={state}
           onChange={(e) => setState(e.target.value)}
-          placeholder="e.g. SP"
+          placeholder="ex.: SP"
         />
       </div>
 
       {/* Capacity */}
       <div className="flex flex-col gap-1">
-        <Label htmlFor="cv_capacity">Capacity</Label>
+        <Label htmlFor="cv_capacity">Capacidade</Label>
         <Input
           id="cv_capacity"
           type="number"
           min="0"
           value={capacity}
           onChange={(e) => setCapacity(e.target.value)}
-          placeholder="e.g. 150"
+          placeholder="ex.: 150"
         />
       </div>
 
       {/* Description */}
       <div className="flex flex-col gap-1">
-        <Label htmlFor="cv_description">Description</Label>
+        <Label htmlFor="cv_description">Descrição</Label>
         <Textarea
           id="cv_description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          placeholder="Brief description of the venue…"
+          placeholder="Breve descrição do venue…"
         />
       </div>
 
       {/* Infrastructure */}
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-[var(--foreground)]">
-          Infrastructure
+          Infraestrutura
         </legend>
         <div className="flex flex-wrap gap-4">
           {INFRASTRUCTURE_OPTIONS.map((item) => (
@@ -171,13 +171,13 @@ export function CommunityVenueForm({ onSuccess }: CommunityVenueFormProps) {
           onCheckedChange={(checked) => setIsAnonymous(Boolean(checked))}
         />
         <Label htmlFor="cv_anonymous" className="cursor-pointer">
-          Submit anonymously
+          Enviar anonimamente
         </Label>
       </div>
 
       {createVenue.isError && (
         <p role="alert" className="text-sm text-red-600">
-          Failed to create venue. Please try again.
+          Falha ao criar venue. Tente novamente.
         </p>
       )}
 
@@ -186,7 +186,7 @@ export function CommunityVenueForm({ onSuccess }: CommunityVenueFormProps) {
         disabled={createVenue.isPending}
         className="self-start bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700"
       >
-        {createVenue.isPending ? 'Creating…' : 'Create Venue'}
+        {createVenue.isPending ? 'Criando…' : 'Criar Venue'}
       </Button>
     </form>
   );

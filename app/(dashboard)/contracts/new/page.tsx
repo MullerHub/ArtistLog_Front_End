@@ -15,6 +15,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ArtistProfile, VenueProfile, Contract } from '@/types';
 
 const CONTRACT_TAGS = ['Transport', 'Effects', 'Lodging', 'Meals', 'Equipment', 'Crew'];
+const CONTRACT_TAG_LABELS: Record<string, string> = {
+  Transport: 'Transporte',
+  Effects: 'Efeitos',
+  Lodging: 'Hospedagem',
+  Meals: 'Refeições',
+  Equipment: 'Equipamentos',
+  Crew: 'Equipe',
+};
 
 export default function NewContractPage() {
   const router = useRouter();
@@ -71,10 +79,10 @@ export default function NewContractPage() {
 
   const validate = () => {
     const errs: Record<string, string> = {};
-    if (!selectedId) errs.counterparty = 'Please select a counterparty.';
-    if (!date) errs.date = 'Date is required.';
-    if (!time) errs.time = 'Time is required.';
-    if (!value || parseFloat(value) <= 0) errs.value = 'Value must be greater than 0.';
+    if (!selectedId) errs.counterparty = 'Selecione uma contraparte.';
+    if (!date) errs.date = 'Data é obrigatória.';
+    if (!time) errs.time = 'Horário é obrigatório.';
+    if (!value || parseFloat(value) <= 0) errs.value = 'O valor deve ser maior que zero.';
     return errs;
   };
 
@@ -121,12 +129,12 @@ export default function NewContractPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-[var(--foreground)]">New Contract</h1>
+      <h1 className="text-2xl font-bold text-[var(--foreground)]">Novo Contrato</h1>
 
       <Card className="border-[var(--border)] bg-[var(--card)]">
         <CardHeader>
           <CardTitle className="text-[var(--card-foreground)]">
-            {role === 'VENUE' ? 'Find an Artist' : 'Find a Venue'}
+            {role === 'VENUE' ? 'Encontrar um Artista' : 'Encontrar um Venue'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -134,7 +142,7 @@ export default function NewContractPage() {
             {/* Search */}
             <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] p-4">
               <div className="flex flex-col gap-1">
-                <Label>Search by City</Label>
+                <Label>Buscar por Cidade</Label>
                 <CitySearch
                   value={searchCity}
                   onChange={setSearchCity}
@@ -142,28 +150,28 @@ export default function NewContractPage() {
                     const parts = city.split(', ');
                     setSearchCity(parts[0] ?? city);
                   }}
-                  placeholder="Enter city to search…"
+                  placeholder="Digite uma cidade para buscar…"
                 />
               </div>
 
               <div className="flex flex-col gap-1">
                 <Label htmlFor="search_name">
-                  Filter by {role === 'VENUE' ? 'Artist' : 'Venue'} Name
+                  Filtrar por Nome do {role === 'VENUE' ? 'Artista' : 'Venue'}
                 </Label>
                 <Input
                   id="search_name"
                   value={searchName}
                   onChange={(e) => setSearchName(e.target.value)}
-                  placeholder="Optional name filter"
+                  placeholder="Filtro de nome opcional"
                 />
               </div>
 
               {filteredResults.length > 0 && (
                 <div className="flex flex-col gap-1">
-                  <Label>Select {role === 'VENUE' ? 'Artist' : 'Venue'}</Label>
+                  <Label>Selecionar {role === 'VENUE' ? 'Artista' : 'Venue'}</Label>
                   <div
                     role="listbox"
-                    aria-label={`${role === 'VENUE' ? 'Artist' : 'Venue'} results`}
+                    aria-label={`Resultados de ${role === 'VENUE' ? 'artista' : 'venue'}`}
                     className="max-h-48 overflow-y-auto rounded-md border border-[var(--border)]"
                   >
                     {filteredResults.map((r) => {
@@ -196,7 +204,7 @@ export default function NewContractPage() {
 
               {selectedName && (
                 <p className="text-sm text-green-600">
-                  Selected: <strong>{selectedName}</strong>
+                  Selecionado: <strong>{selectedName}</strong>
                 </p>
               )}
               {errors.counterparty && (
@@ -209,7 +217,7 @@ export default function NewContractPage() {
             {/* Date & Time */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
-                <Label htmlFor="contract_date">Date *</Label>
+                <Label htmlFor="contract_date">Data *</Label>
                 <Input
                   id="contract_date"
                   type="date"
@@ -225,7 +233,7 @@ export default function NewContractPage() {
               </div>
 
               <div className="flex flex-col gap-1">
-                <Label htmlFor="contract_time">Time *</Label>
+                <Label htmlFor="contract_time">Horário *</Label>
                 <Input
                   id="contract_time"
                   type="time"
@@ -243,7 +251,7 @@ export default function NewContractPage() {
 
             {/* Value */}
             <div className="flex flex-col gap-1">
-              <Label htmlFor="contract_value">Value (R$) *</Label>
+              <Label htmlFor="contract_value">Valor (R$) *</Label>
               <Input
                 id="contract_value"
                 type="number"
@@ -263,20 +271,20 @@ export default function NewContractPage() {
 
             {/* Details */}
             <div className="flex flex-col gap-1">
-              <Label htmlFor="contract_details">Details / Notes</Label>
+              <Label htmlFor="contract_details">Detalhes / Observações</Label>
               <Textarea
                 id="contract_details"
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 rows={3}
-                placeholder="Any additional details or special requirements…"
+                placeholder="Detalhes adicionais ou requisitos especiais…"
               />
             </div>
 
             {/* Tags */}
             <fieldset>
               <legend className="mb-2 text-sm font-medium text-[var(--foreground)]">
-                Contract Tags
+                Tags do Contrato
               </legend>
               <div className="flex flex-wrap gap-4">
                 {CONTRACT_TAGS.map((tag) => (
@@ -287,7 +295,7 @@ export default function NewContractPage() {
                       onCheckedChange={() => toggleTag(tag)}
                     />
                     <Label htmlFor={`tag_${tag}`} className="cursor-pointer">
-                      {tag}
+                      {CONTRACT_TAG_LABELS[tag] ?? tag}
                     </Label>
                   </div>
                 ))}
@@ -296,7 +304,7 @@ export default function NewContractPage() {
 
             {createContract.isError && (
               <p role="alert" className="text-sm text-red-600">
-                Failed to create contract. Please try again.
+                Falha ao criar contrato. Tente novamente.
               </p>
             )}
 
@@ -305,7 +313,7 @@ export default function NewContractPage() {
               disabled={createContract.isPending}
               className="self-start bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700"
             >
-              {createContract.isPending ? 'Creating…' : 'Create Contract'}
+              {createContract.isPending ? 'Criando…' : 'Criar Contrato'}
             </Button>
           </form>
         </CardContent>

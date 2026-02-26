@@ -28,7 +28,7 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Invalid credentials. Please try again.';
+        'Credenciais inválidas. Tente novamente.';
       setError(message);
     } finally {
       setLoading(false);
@@ -38,9 +38,9 @@ export default function LoginPage() {
   return (
     <Card className="border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)]">
       <CardHeader>
-        <CardTitle className="text-[var(--card-foreground)]">Sign in</CardTitle>
+        <CardTitle className="text-[var(--card-foreground)]">Entrar</CardTitle>
         <CardDescription className="text-[var(--muted-foreground)]">
-          Enter your credentials to access your account
+          Informe suas credenciais para acessar sua conta
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -53,7 +53,7 @@ export default function LoginPage() {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email" className="text-[var(--card-foreground)]">
-              Email
+              E-mail
             </Label>
             <Input
               id="email"
@@ -63,14 +63,14 @@ export default function LoginPage() {
               tabIndex={0}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="voce@exemplo.com"
               className="bg-[var(--input)] border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="password" className="text-[var(--card-foreground)]">
-              Password
+              Senha
             </Label>
             <Input
               id="password"
@@ -93,7 +93,7 @@ export default function LoginPage() {
               className="h-4 w-4 rounded border-[var(--border)] accent-[var(--primary)]"
             />
             <Label htmlFor="remember" className="text-sm text-[var(--muted-foreground)] cursor-pointer">
-              Remember me
+              Lembrar-me
             </Label>
           </div>
 
@@ -103,17 +103,17 @@ export default function LoginPage() {
             tabIndex={0}
             className="w-full bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700"
           >
-            {loading ? 'Signing in…' : 'Log in'}
+            {loading ? 'Entrando…' : 'Entrar'}
           </Button>
 
           <p className="text-center text-sm text-[var(--muted-foreground)]">
-            Don&apos;t have an account?{' '}
+            Não tem uma conta?{' '}
             <Link
               href="/signup"
               tabIndex={0}
               className="text-[var(--primary)] hover:underline focus:outline-none focus:underline"
             >
-              Sign up
+              Cadastre-se
             </Link>
           </p>
         </form>

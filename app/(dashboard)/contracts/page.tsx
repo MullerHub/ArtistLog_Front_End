@@ -57,16 +57,16 @@ export default function ContractsPage() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Contracts</h1>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">Contratos</h1>
         <Link href="/contracts/new">
           <Button className="bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700">
-            + New Contract
+            + Novo Contrato
           </Button>
         </Link>
       </div>
 
       {/* Filter tabs */}
-      <div role="tablist" aria-label="Filter contracts by status" className="flex gap-1 flex-wrap">
+      <div role="tablist" aria-label="Filtrar contratos por status" className="flex gap-1 flex-wrap">
         {STATUS_TABS.map((tab) => (
           <button
             key={tab}
@@ -87,9 +87,9 @@ export default function ContractsPage() {
 
       {/* List */}
       {isLoading ? (
-        <p className="text-[var(--muted-foreground)]">Loading contracts…</p>
+        <p className="text-[var(--muted-foreground)]">Carregando contratos…</p>
       ) : filtered.length === 0 ? (
-        <p className="text-[var(--muted-foreground)]">No contracts found.</p>
+        <p className="text-[var(--muted-foreground)]">Nenhum contrato encontrado.</p>
       ) : (
         <div className="flex flex-col gap-4">
           {filtered.map((contract) => {
@@ -140,7 +140,7 @@ export default function ContractsPage() {
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <Link href={`/contracts/${contract.id}`}>
                       <Button variant="outline" size="sm">
-                        Details
+                        Detalhes
                       </Button>
                     </Link>
 
@@ -154,7 +154,7 @@ export default function ContractsPage() {
                             updateStatus.mutate({ id: contract.id, status: 'ACCEPTED' })
                           }
                         >
-                          Accept
+                          Aceitar
                         </Button>
                         <Button
                           size="sm"
@@ -164,7 +164,7 @@ export default function ContractsPage() {
                             updateStatus.mutate({ id: contract.id, status: 'REJECTED' })
                           }
                         >
-                          Reject
+                          Recusar
                         </Button>
                       </>
                     )}

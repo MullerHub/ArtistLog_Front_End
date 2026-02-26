@@ -29,12 +29,12 @@ export default function ArtistsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-[var(--foreground)]">Find Artists</h1>
+      <h1 className="text-2xl font-bold text-[var(--foreground)]">Encontrar Artistas</h1>
 
       {/* Search form */}
       <div className="flex flex-wrap items-end gap-4">
         <div className="flex flex-col gap-1 min-w-[220px]">
-          <Label htmlFor="city-search">City</Label>
+          <Label htmlFor="city-search">Cidade</Label>
           <CitySearch
             value={cityInput}
             onChange={setCityInput}
@@ -44,7 +44,7 @@ export default function ArtistsPage() {
         </div>
 
         <div className="flex flex-col gap-1">
-          <Label htmlFor="radius-select">Radius</Label>
+          <Label htmlFor="radius-select">Raio</Label>
           <select
             id="radius-select"
             value={radius}
@@ -67,13 +67,13 @@ export default function ArtistsPage() {
         </div>
       ) : !selectedCity ? (
         <div className="flex flex-col items-center gap-2 py-16 text-center text-[var(--muted-foreground)]">
-          <p className="text-lg font-medium">Search for artists near you</p>
-          <p className="text-sm">Enter a city above to discover artists available for bookings.</p>
+          <p className="text-lg font-medium">Busque artistas perto de você</p>
+          <p className="text-sm">Informe uma cidade acima para descobrir artistas disponíveis para shows.</p>
         </div>
       ) : results.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-16 text-center text-[var(--muted-foreground)]">
-          <p className="text-lg font-medium">No artists found</p>
-          <p className="text-sm">Try increasing the search radius or searching a different city.</p>
+          <p className="text-lg font-medium">Nenhum artista encontrado</p>
+          <p className="text-sm">Tente aumentar o raio de busca ou pesquisar outra cidade.</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -112,7 +112,7 @@ export default function ArtistsPage() {
                 <div className="flex gap-2 mt-1">
                   <Link href={`/artists/${artist.id}`}>
                     <Button size="sm" variant="outline">
-                      View Profile
+                      Ver Perfil
                     </Button>
                   </Link>
                   <Link href={`/contracts/new?artist_id=${artist.id}`}>
@@ -120,7 +120,7 @@ export default function ArtistsPage() {
                       size="sm"
                       className="bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700"
                     >
-                      Propose Contract
+                      Propor Contrato
                     </Button>
                   </Link>
                 </div>

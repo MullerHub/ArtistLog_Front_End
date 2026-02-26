@@ -44,9 +44,9 @@ export default function VenueProfilePage() {
   if (isError || !venue) {
     return (
       <div className="flex flex-col items-center gap-2 py-16 text-center text-[var(--muted-foreground)]">
-        <p className="text-lg font-medium">Venue not found</p>
+        <p className="text-lg font-medium">Venue não encontrado</p>
         <Link href="/venues">
-          <Button variant="outline">Back to Venues</Button>
+          <Button variant="outline">Voltar para Venues</Button>
         </Link>
       </div>
     );
@@ -56,7 +56,7 @@ export default function VenueProfilePage() {
     <div className="flex flex-col gap-6 max-w-3xl">
       {/* Back link */}
       <Link href="/venues" className="text-sm text-[var(--muted-foreground)] hover:underline w-fit">
-        ← Back to Venues
+        ← Voltar para Venues
       </Link>
 
       {/* Profile card */}
@@ -73,7 +73,7 @@ export default function VenueProfilePage() {
                 📍 {venue.city}, {venue.state}
               </p>
               <p className="text-sm font-medium text-[var(--foreground)]">
-                👥 Capacity: {venue.capacity}
+                👥 Capacidade: {venue.capacity}
               </p>
             </div>
           </div>
@@ -81,7 +81,7 @@ export default function VenueProfilePage() {
           {/* Bio */}
           {venue.bio && (
             <div>
-              <h2 className="text-sm font-semibold text-[var(--foreground)] mb-1">About</h2>
+              <h2 className="text-sm font-semibold text-[var(--foreground)] mb-1">Sobre</h2>
               <p className="text-sm text-[var(--muted-foreground)] whitespace-pre-wrap">{venue.bio}</p>
             </div>
           )}
@@ -89,7 +89,7 @@ export default function VenueProfilePage() {
           {/* Infrastructure tags */}
           {venue.infrastructure.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-[var(--foreground)] mb-1">Infrastructure</h2>
+              <h2 className="text-sm font-semibold text-[var(--foreground)] mb-1">Infraestrutura</h2>
               <div className="flex flex-wrap gap-1">
                 {venue.infrastructure.map((tag) => (
                   <span
@@ -107,7 +107,7 @@ export default function VenueProfilePage() {
           <div className="pt-2">
             <Link href={`/contracts/new?venue_id=${venue.id}`}>
               <Button className="bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700">
-                Propose Contract
+                Propor Contrato
               </Button>
             </Link>
           </div>
@@ -116,11 +116,11 @@ export default function VenueProfilePage() {
 
       {/* Reviews section */}
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-[var(--foreground)]">Reviews</h2>
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">Avaliações</h2>
         {reviewsLoading ? (
           <LoadingSkeleton variant="card" count={2} />
         ) : venueReviews.length === 0 ? (
-          <p className="text-sm text-[var(--muted-foreground)]">No reviews yet.</p>
+          <p className="text-sm text-[var(--muted-foreground)]">Nenhuma avaliação ainda.</p>
         ) : (
           venueReviews.map((review) => (
             <Card key={review.id} className="border-[var(--border)] bg-[var(--card)]">

@@ -22,10 +22,10 @@ export default function NewCommunityVenuePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-[var(--foreground)]">Add Community Venue</h1>
+      <h1 className="text-2xl font-bold text-[var(--foreground)]">Adicionar Venue da Comunidade</h1>
       <Card className="border-[var(--border)] bg-[var(--card)]">
         <CardHeader>
-          <CardTitle className="text-[var(--card-foreground)]">Venue Details</CardTitle>
+          <CardTitle className="text-[var(--card-foreground)]">Dados do Venue</CardTitle>
         </CardHeader>
         <CardContent>
           <CommunityVenueForm onSuccess={() => router.push('/venues/community')} />

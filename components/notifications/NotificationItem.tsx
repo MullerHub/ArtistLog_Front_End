@@ -33,7 +33,7 @@ export function NotificationItem({ notification, onMarkRead, isMarkingRead }: No
   return (
     <article
       role="article"
-      aria-label={`${notification.title} – ${notification.read ? 'read' : 'unread'}`}
+      aria-label={`${notification.title} – ${notification.read ? 'lida' : 'não lida'}`}
       tabIndex={0}
       onClick={handleMarkRead}
       onKeyDown={(e) => {
@@ -82,7 +82,7 @@ export function NotificationItem({ notification, onMarkRead, isMarkingRead }: No
             e.stopPropagation();
             onMarkRead(notification.id);
           }}
-          aria-label={`Mark "${notification.title}" as read`}
+          aria-label={`Marcar "${notification.title}" como lida`}
         >
           <Check className="h-3 w-3" />
         </Button>

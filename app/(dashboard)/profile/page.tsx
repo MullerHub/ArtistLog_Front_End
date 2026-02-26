@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ArtistProfile, VenueProfile } from '@/types';
 
-const INFRASTRUCTURE_OPTIONS = ['Stage', 'PA System', 'Lighting', 'Dressing Room', 'Parking'];
+const INFRASTRUCTURE_OPTIONS = ['Palco', 'Sistema de PA', 'Iluminação', 'Camarim', 'Estacionamento'];
 
 function Toast({ message, type }: { message: string; type: 'success' | 'error' }) {
   return (
@@ -98,18 +98,18 @@ export default function ProfilePage() {
     mutationFn: (data: Partial<ArtistProfile>) => artists.updateArtistProfile(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['artist-profile'] });
-      showToast('Profile saved!', 'success');
+      showToast('Perfil salvo!', 'success');
     },
-    onError: () => showToast('Failed to save profile.', 'error'),
+    onError: () => showToast('Falha ao salvar o perfil.', 'error'),
   });
 
   const venueMutation = useMutation({
     mutationFn: (data: Partial<VenueProfile>) => venues.updateVenueProfile(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['venue-profile'] });
-      showToast('Profile saved!', 'success');
+      showToast('Perfil salvo!', 'success');
     },
-    onError: () => showToast('Failed to save profile.', 'error'),
+    onError: () => showToast('Falha ao salvar o perfil.', 'error'),
   });
 
   // ── Tag helpers ───────────────────────────────────────────────────────────
@@ -169,23 +169,23 @@ export default function ProfilePage() {
     <div className="flex flex-col gap-6">
       {toast && <Toast message={toast.message} type={toast.type} />}
 
-      <h1 className="text-2xl font-bold text-[var(--foreground)]">Profile</h1>
+      <h1 className="text-2xl font-bold text-[var(--foreground)]">Perfil</h1>
 
       {role === 'ARTIST' && (
         <Card className="border-[var(--border)] bg-[var(--card)]">
           <CardHeader>
-            <CardTitle className="text-[var(--card-foreground)]">Artist Profile</CardTitle>
+            <CardTitle className="text-[var(--card-foreground)]">Perfil de Artista</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleArtistSubmit} className="flex flex-col gap-5">
               {/* Stage name */}
               <div className="flex flex-col gap-1">
-                <Label htmlFor="stage_name">Stage Name</Label>
+                <Label htmlFor="stage_name">Nome Artístico</Label>
                 <Input
                   id="stage_name"
                   value={stageName}
                   onChange={(e) => setStageName(e.target.value)}
-                  placeholder="Your stage name"
+                  placeholder="Seu nome artístico"
                 />
               </div>
 
@@ -197,13 +197,13 @@ export default function ProfilePage() {
                   value={artistBio}
                   onChange={(e) => setArtistBio(e.target.value)}
                   rows={4}
-                  placeholder="Tell venues about yourself…"
+                  placeholder="Conte aos venues sobre você…"
                 />
               </div>
 
               {/* Cache base */}
               <div className="flex flex-col gap-1">
-                <Label htmlFor="cache_base">Performance Fee (R$)</Label>
+                <Label htmlFor="cache_base">Cachê (R$)</Label>
                 <Input
                   id="cache_base"
                   type="number"
@@ -211,27 +211,27 @@ export default function ProfilePage() {
                   step="0.01"
                   value={cacheBase}
                   onChange={(e) => setCacheBase(e.target.value)}
-                  placeholder="0.00"
+                  placeholder="0,00"
                 />
               </div>
 
               {/* Tags */}
               <div className="flex flex-col gap-2">
-                <Label htmlFor="tag_input">Genre Tags</Label>
+                <Label htmlFor="tag_input">Tags de Gênero</Label>
                 <div className="flex gap-2">
                   <Input
                     id="tag_input"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleTagKeyDown}
-                    placeholder="Type a tag and press Enter"
+                    placeholder="Digite uma tag e pressione Enter"
                   />
                   <Button type="button" variant="outline" onClick={addTag}>
-                    Add
+                    Adicionar
                   </Button>
                 </div>
                 {artistTags.length > 0 && (
-                  <div className="flex flex-wrap gap-2" role="list" aria-label="Genre tags">
+                  <div className="flex flex-wrap gap-2" role="list" aria-label="Tags de gênero">
                     {artistTags.map((tag) => (
                       <span
                         key={tag}
@@ -241,7 +241,7 @@ export default function ProfilePage() {
                         {tag}
                         <button
                           type="button"
-                          aria-label={`Remove tag ${tag}`}
+                          aria-label={`Remover tag ${tag}`}
                           onClick={() => removeTag(tag)}
                           className="ml-1 rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
                         >
@@ -255,7 +255,7 @@ export default function ProfilePage() {
 
               {/* City */}
               <div className="flex flex-col gap-1">
-                <Label htmlFor="artist_city">City</Label>
+                <Label htmlFor="artist_city">Cidade</Label>
                 <CitySearch
                   value={artistCity}
                   onChange={setArtistCity}
@@ -264,18 +264,18 @@ export default function ProfilePage() {
                     setArtistCity(parts[0] ?? cityName);
                     setArtistState(parts[1] ?? '');
                   }}
-                  placeholder="Search your city…"
+                  placeholder="Buscar sua cidade…"
                 />
               </div>
 
               {/* State */}
               <div className="flex flex-col gap-1">
-                <Label htmlFor="artist_state">State</Label>
+                <Label htmlFor="artist_state">Estado</Label>
                 <Input
                   id="artist_state"
                   value={artistState}
                   onChange={(e) => setArtistState(e.target.value)}
-                  placeholder="State"
+                  placeholder="Estado"
                 />
               </div>
 
@@ -284,7 +284,7 @@ export default function ProfilePage() {
                 disabled={isPending}
                 className="self-start bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700"
               >
-                {isPending ? 'Saving…' : 'Save Profile'}
+                {isPending ? 'Salvando…' : 'Salvar Perfil'}
               </Button>
             </form>
           </CardContent>
@@ -294,18 +294,18 @@ export default function ProfilePage() {
       {role === 'VENUE' && (
         <Card className="border-[var(--border)] bg-[var(--card)]">
           <CardHeader>
-            <CardTitle className="text-[var(--card-foreground)]">Venue Profile</CardTitle>
+            <CardTitle className="text-[var(--card-foreground)]">Perfil do Venue</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleVenueSubmit} className="flex flex-col gap-5">
               {/* Venue name */}
               <div className="flex flex-col gap-1">
-                <Label htmlFor="venue_name">Venue Name</Label>
+                <Label htmlFor="venue_name">Nome do Venue</Label>
                 <Input
                   id="venue_name"
                   value={venueName}
                   onChange={(e) => setVenueName(e.target.value)}
-                  placeholder="Your venue name"
+                  placeholder="Nome do seu venue"
                 />
               </div>
 
@@ -317,27 +317,27 @@ export default function ProfilePage() {
                   value={venueBio}
                   onChange={(e) => setVenueBio(e.target.value)}
                   rows={4}
-                  placeholder="Describe your venue…"
+                  placeholder="Descreva seu venue…"
                 />
               </div>
 
               {/* Capacity */}
               <div className="flex flex-col gap-1">
-                <Label htmlFor="capacity">Capacity</Label>
+                <Label htmlFor="capacity">Capacidade</Label>
                 <Input
                   id="capacity"
                   type="number"
                   min="0"
                   value={capacity}
                   onChange={(e) => setCapacity(e.target.value)}
-                  placeholder="e.g. 200"
+                  placeholder="ex.: 200"
                 />
               </div>
 
               {/* Infrastructure */}
               <fieldset>
                 <legend className="mb-2 text-sm font-medium text-[var(--foreground)]">
-                  Infrastructure
+                  Infraestrutura
                 </legend>
                 <div className="flex flex-wrap gap-4">
                   {INFRASTRUCTURE_OPTIONS.map((item) => (
@@ -357,7 +357,7 @@ export default function ProfilePage() {
 
               {/* City */}
               <div className="flex flex-col gap-1">
-                <Label htmlFor="venue_city">City</Label>
+                <Label htmlFor="venue_city">Cidade</Label>
                 <CitySearch
                   value={venueCity}
                   onChange={setVenueCity}
@@ -366,18 +366,18 @@ export default function ProfilePage() {
                     setVenueCity(parts[0] ?? cityName);
                     setVenueState(parts[1] ?? '');
                   }}
-                  placeholder="Search your city…"
+                  placeholder="Buscar sua cidade…"
                 />
               </div>
 
               {/* State */}
               <div className="flex flex-col gap-1">
-                <Label htmlFor="venue_state">State</Label>
+                <Label htmlFor="venue_state">Estado</Label>
                 <Input
                   id="venue_state"
                   value={venueState}
                   onChange={(e) => setVenueState(e.target.value)}
-                  placeholder="State"
+                  placeholder="Estado"
                 />
               </div>
 
@@ -386,7 +386,7 @@ export default function ProfilePage() {
                 disabled={isPending}
                 className="self-start bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700"
               >
-                {isPending ? 'Saving…' : 'Save Profile'}
+                {isPending ? 'Salvando…' : 'Salvar Perfil'}
               </Button>
             </form>
           </CardContent>

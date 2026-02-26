@@ -14,20 +14,20 @@ interface NavLink {
 }
 
 const commonLinks: NavLink[] = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/profile', label: 'Profile' },
-  { href: '/contracts', label: 'Contracts' },
+  { href: '/dashboard', label: 'Painel' },
+  { href: '/profile', label: 'Perfil' },
+  { href: '/contracts', label: 'Contratos' },
 ];
 
 const artistLinks: NavLink[] = [
-  { href: '/schedule', label: 'My Schedule' },
+  { href: '/schedule', label: 'Minha Agenda' },
   { href: '/venues', label: 'Venues' },
-  { href: '/community-venues', label: 'Community Venues' },
+  { href: '/community-venues', label: 'Venues da Comunidade' },
 ];
 
 const venueLinks: NavLink[] = [
-  { href: '/artists', label: 'Artists' },
-  { href: '/schedule-requests', label: 'Schedule Requests' },
+  { href: '/artists', label: 'Artistas' },
+  { href: '/schedule-requests', label: 'Pedidos de Agenda' },
 ];
 
 interface NavbarProps {
@@ -89,7 +89,7 @@ export const Navbar = ({ unreadCount = 0 }: NavbarProps) => {
         {/* Notifications */}
         <Link
           href="/notifications"
-          aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+          aria-label={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ''}`}
           className="relative flex items-center text-gray-500 hover:text-gray-900 focus:outline-none focus:underline"
           tabIndex={0}
         >
@@ -110,9 +110,9 @@ export const Navbar = ({ unreadCount = 0 }: NavbarProps) => {
           size="sm"
           onClick={handleLogout}
           tabIndex={0}
-          aria-label="Log out"
+          aria-label="Sair"
         >
-          Logout
+          Sair
         </Button>
       </div>
     </nav>

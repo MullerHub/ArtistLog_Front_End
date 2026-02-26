@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (checking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
-        <p className="text-[var(--muted-foreground)]">Loading…</p>
+        <p className="text-[var(--muted-foreground)]">Carregando…</p>
       </div>
     );
   }

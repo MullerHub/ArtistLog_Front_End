@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { ScheduleSlot } from '@/types';
 
 function formatMonthYear(year: number, month: number) {
-  return new Date(year, month, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+  return new Date(year, month, 1).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
 }
 
 export default function SchedulePage() {
@@ -51,7 +51,7 @@ export default function SchedulePage() {
       setNewNotes('');
       setFormError('');
     },
-    onError: () => setFormError('Failed to add slot. Please try again.'),
+    onError: () => setFormError('Falha ao adicionar slot. Tente novamente.'),
   });
 
   const toggleAvailability = useMutation({
@@ -68,7 +68,7 @@ export default function SchedulePage() {
   const handleAddSlot = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDate) {
-      setFormError('Date is required.');
+      setFormError('Data é obrigatória.');
       return;
     }
     setFormError('');
@@ -95,16 +95,16 @@ export default function SchedulePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-[var(--foreground)]">Schedule</h1>
+      <h1 className="text-2xl font-bold text-[var(--foreground)]">Agenda</h1>
 
       {/* Add slot form */}
       <Card className="border-[var(--border)] bg-[var(--card)]">
         <CardContent className="pt-6">
           <form onSubmit={handleAddSlot} className="flex flex-col gap-4">
-            <h2 className="text-base font-semibold text-[var(--card-foreground)]">Add Slot</h2>
+            <h2 className="text-base font-semibold text-[var(--card-foreground)]">Adicionar Slot</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
-                <Label htmlFor="slot_date">Date *</Label>
+                <Label htmlFor="slot_date">Data *</Label>
                 <Input
                   id="slot_date"
                   type="date"
@@ -113,13 +113,13 @@ export default function SchedulePage() {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <Label htmlFor="slot_notes">Notes</Label>
+                <Label htmlFor="slot_notes">Observações</Label>
                 <Textarea
                   id="slot_notes"
                   value={newNotes}
                   onChange={(e) => setNewNotes(e.target.value)}
                   rows={2}
-                  placeholder="Optional notes…"
+                  placeholder="Observações opcionais…"
                 />
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function SchedulePage() {
               disabled={createSlot.isPending}
               className="self-start bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700"
             >
-              {createSlot.isPending ? 'Adding…' : 'Add Slot'}
+              {createSlot.isPending ? 'Adicionando…' : 'Adicionar Slot'}
             </Button>
           </form>
         </CardContent>
@@ -141,22 +141,22 @@ export default function SchedulePage() {
 
       {/* Month navigation */}
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={prevMonth} aria-label="Previous month">
+        <Button variant="outline" size="sm" onClick={prevMonth} aria-label="Mês anterior">
           ←
         </Button>
         <h2 className="text-lg font-semibold text-[var(--foreground)]">
           {formatMonthYear(viewYear, viewMonth)}
         </h2>
-        <Button variant="outline" size="sm" onClick={nextMonth} aria-label="Next month">
+        <Button variant="outline" size="sm" onClick={nextMonth} aria-label="Próximo mês">
           →
         </Button>
       </div>
 
       {/* Slots list */}
       {isLoading ? (
-        <p className="text-[var(--muted-foreground)]">Loading schedule…</p>
+        <p className="text-[var(--muted-foreground)]">Carregando agenda…</p>
       ) : sortedSlots.length === 0 ? (
-        <p className="text-[var(--muted-foreground)]">No slots for this month.</p>
+        <p className="text-[var(--muted-foreground)]">Nenhum slot para este mês.</p>
       ) : (
         <div className="flex flex-col gap-3">
           {sortedSlots.map((slot) => (
@@ -170,7 +170,7 @@ export default function SchedulePage() {
               <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
                 <div className="flex flex-col gap-0.5">
                   <p className="font-medium text-[var(--foreground)]">
-                    {new Date(slot.date).toLocaleDateString('default', {
+                    {new Date(slot.date).toLocaleDateString('pt-BR', {
                       weekday: 'short',
                       day: 'numeric',
                       month: 'short',
@@ -190,7 +190,7 @@ export default function SchedulePage() {
                         : 'bg-gray-100 text-gray-700',
                     ].join(' ')}
                   >
-                    {slot.available ? 'Available' : 'Unavailable'}
+                    {slot.available ? 'Disponível' : 'Indisponível'}
                   </span>
 
                   <Button
@@ -200,9 +200,9 @@ export default function SchedulePage() {
                     onClick={() =>
                       toggleAvailability.mutate({ id: slot.id, available: !slot.available })
                     }
-                    aria-label={slot.available ? 'Mark unavailable' : 'Mark available'}
+                    aria-label={slot.available ? 'Marcar como indisponível' : 'Marcar como disponível'}
                   >
-                    Toggle
+                    Alternar
                   </Button>
 
                   <Button
@@ -210,9 +210,9 @@ export default function SchedulePage() {
                     size="sm"
                     disabled={deleteSlot.isPending}
                     onClick={() => deleteSlot.mutate(slot.id)}
-                    aria-label="Delete slot"
+                    aria-label="Excluir slot"
                   >
-                    Delete
+                    Excluir
                   </Button>
                 </div>
               </CardContent>

@@ -48,9 +48,9 @@ export default function ArtistProfilePage() {
   if (isError || !artist) {
     return (
       <div className="flex flex-col items-center gap-2 py-16 text-center text-[var(--muted-foreground)]">
-        <p className="text-lg font-medium">Artist not found</p>
+        <p className="text-lg font-medium">Artista não encontrado</p>
         <Link href="/artists">
-          <Button variant="outline">Back to Artists</Button>
+          <Button variant="outline">Voltar para Artistas</Button>
         </Link>
       </div>
     );
@@ -60,7 +60,7 @@ export default function ArtistProfilePage() {
     <div className="flex flex-col gap-6 max-w-3xl">
       {/* Back link */}
       <Link href="/artists" className="text-sm text-[var(--muted-foreground)] hover:underline w-fit">
-        ← Back to Artists
+        ← Voltar para Artistas
       </Link>
 
       {/* Profile card */}
@@ -78,14 +78,13 @@ export default function ArtistProfilePage() {
               </p>
               <p className="text-sm font-medium text-[var(--foreground)]">
                 💰 {formatCurrency(artist.cache_base)} por show
-              </p>
-            </div>
+              </p>            </div>
           </div>
 
           {/* Bio */}
           {artist.bio && (
             <div>
-              <h2 className="text-sm font-semibold text-[var(--foreground)] mb-1">About</h2>
+              <h2 className="text-sm font-semibold text-[var(--foreground)] mb-1">Sobre</h2>
               <p className="text-sm text-[var(--muted-foreground)] whitespace-pre-wrap">{artist.bio}</p>
             </div>
           )}
@@ -93,7 +92,7 @@ export default function ArtistProfilePage() {
           {/* Genre tags */}
           {artist.tags.length > 0 && (
             <div>
-              <h2 className="text-sm font-semibold text-[var(--foreground)] mb-1">Genres</h2>
+              <h2 className="text-sm font-semibold text-[var(--foreground)] mb-1">Gêneros</h2>
               <div className="flex flex-wrap gap-1">
                 {artist.tags.map((tag) => (
                   <span
@@ -111,7 +110,7 @@ export default function ArtistProfilePage() {
           <div className="pt-2">
             <Link href={`/contracts/new?artist_id=${artist.id}`}>
               <Button className="bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700">
-                Propose Contract
+                Propor Contrato
               </Button>
             </Link>
           </div>
@@ -120,11 +119,11 @@ export default function ArtistProfilePage() {
 
       {/* Reviews section */}
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-[var(--foreground)]">Reviews</h2>
+        <h2 className="text-lg font-semibold text-[var(--foreground)]">Avaliações</h2>
         {reviewsLoading ? (
           <LoadingSkeleton variant="card" count={2} />
         ) : artistReviews.length === 0 ? (
-          <p className="text-sm text-[var(--muted-foreground)]">No reviews yet.</p>
+          <p className="text-sm text-[var(--muted-foreground)]">Nenhuma avaliação ainda.</p>
         ) : (
           artistReviews.map((review) => (
             <Card key={review.id} className="border-[var(--border)] bg-[var(--card)]">

@@ -27,7 +27,7 @@ export default function SignupPage() {
     setError(null);
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError('As senhas não coincidem.');
       return;
     }
 
@@ -39,7 +39,7 @@ export default function SignupPage() {
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Failed to create account. Please try again.';
+        'Falha ao criar conta. Tente novamente.';
       setError(message);
     } finally {
       setLoading(false);
@@ -49,9 +49,9 @@ export default function SignupPage() {
   return (
     <Card className="border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)]">
       <CardHeader>
-        <CardTitle className="text-[var(--card-foreground)]">Create an account</CardTitle>
+        <CardTitle className="text-[var(--card-foreground)]">Criar uma conta</CardTitle>
         <CardDescription className="text-[var(--muted-foreground)]">
-          Join ArtistLog to connect with artists and venues
+          Entre no ArtistLog para conectar artistas e venues
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -64,7 +64,7 @@ export default function SignupPage() {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email" className="text-[var(--card-foreground)]">
-              Email
+              E-mail
             </Label>
             <Input
               id="email"
@@ -74,14 +74,14 @@ export default function SignupPage() {
               tabIndex={0}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="voce@exemplo.com"
               className="bg-[var(--input)] border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)]"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="password" className="text-[var(--card-foreground)]">
-              Password
+              Senha
             </Label>
             <Input
               id="password"
@@ -98,7 +98,7 @@ export default function SignupPage() {
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="confirmPassword" className="text-[var(--card-foreground)]">
-              Confirm password
+              Confirmar senha
             </Label>
             <Input
               id="confirmPassword"
@@ -116,7 +116,7 @@ export default function SignupPage() {
           {/* Role selection */}
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-medium text-[var(--card-foreground)]">
-              I am a…
+              Sou um…
             </legend>
             <div className="flex gap-3">
               {(['ARTIST', 'VENUE'] as Role[]).map((r) => (
@@ -142,7 +142,7 @@ export default function SignupPage() {
                   {r.charAt(0) + r.slice(1).toLowerCase()}
                   {role === r && (
                     <Badge className="ml-1 bg-[var(--primary)] text-[var(--primary-foreground)] text-xs">
-                      Selected
+                      Selecionado
                     </Badge>
                   )}
                 </label>
@@ -156,17 +156,17 @@ export default function SignupPage() {
             tabIndex={0}
             className="w-full bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700"
           >
-            {loading ? 'Creating account…' : 'Create account'}
+            {loading ? 'Criando conta…' : 'Criar conta'}
           </Button>
 
           <p className="text-center text-sm text-[var(--muted-foreground)]">
-            Already have an account?{' '}
+            Já tem uma conta?{' '}
             <Link
               href="/login"
               tabIndex={0}
               className="text-[var(--primary)] hover:underline focus:outline-none focus:underline"
             >
-              Log in
+              Entrar
             </Link>
           </p>
         </form>

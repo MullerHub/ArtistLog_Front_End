@@ -69,51 +69,51 @@ export default function DashboardPage() {
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold text-[var(--foreground)]">
-          Welcome back, {displayName} 👋
+          Olá, {displayName} 👋
         </h1>
         <p className="mt-1 text-[var(--muted-foreground)]">
-          {role === 'ARTIST' ? 'Manage your bookings and schedule.' : 'Manage your venue and artists.'}
+          {role === 'ARTIST' ? 'Gerencie suas reservas e agenda.' : 'Gerencie seu venue e artistas.'}
         </p>
       </div>
 
       {/* Stats */}
       <section aria-label="Quick stats">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-          Overview
+          Visão Geral
         </h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatCard label="Total Contracts" value={totalContracts} />
-          <StatCard label="Pending Contracts" value={pendingContracts} />
+          <StatCard label="Total de Contratos" value={totalContracts} />
+          <StatCard label="Contratos Pendentes" value={pendingContracts} />
           {role === 'ARTIST' ? (
-            <StatCard label="Available Slots" value={upcomingSlots} />
+            <StatCard label="Slots Disponíveis" value={upcomingSlots} />
           ) : (
-            <StatCard label="Team Artists" value="—" />
+            <StatCard label="Artistas Parceiros" value="—" />
           )}
-          <StatCard label="Unread Notifications" value={unreadNotifications} />
+          <StatCard label="Notificações Não Lidas" value={unreadNotifications} />
         </div>
       </section>
 
       {/* Quick actions */}
       <section aria-label="Quick actions">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-          Quick Actions
+          Ações Rápidas
         </h2>
         <div className="flex flex-wrap gap-3">
           {role === 'ARTIST' ? (
             <>
               <Link href="/venues">
                 <Button className="bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700">
-                  Find Venues
+                  Encontrar Venues
                 </Button>
               </Link>
               <Link href="/community-venues">
                 <Button variant="outline" className="border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--muted)]">
-                  Create Community Venue
+                  Criar Venue da Comunidade
                 </Button>
               </Link>
               <Link href="/schedule">
                 <Button variant="outline" className="border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--muted)]">
-                  Manage Schedule
+                  Gerenciar Agenda
                 </Button>
               </Link>
             </>
@@ -121,12 +121,12 @@ export default function DashboardPage() {
             <>
               <Link href="/artists">
                 <Button className="bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700">
-                  Find Artists
+                  Encontrar Artistas
                 </Button>
               </Link>
               <Link href="/contracts">
                 <Button variant="outline" className="border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--muted)]">
-                  Post Contract
+                  Publicar Contrato
                 </Button>
               </Link>
             </>
@@ -138,17 +138,17 @@ export default function DashboardPage() {
       <section aria-label="Recent notifications">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-            Recent Notifications
+            Notificações Recentes
           </h2>
           <Link
             href="/notifications"
             className="text-xs text-[var(--primary)] hover:underline focus:outline-none focus:underline"
           >
-            View all
+            Ver todas
           </Link>
         </div>
         {recentNotifications.length === 0 ? (
-          <p className="text-sm text-[var(--muted-foreground)]">No notifications yet.</p>
+          <p className="text-sm text-[var(--muted-foreground)]">Nenhuma notificação ainda.</p>
         ) : (
           <div className="flex flex-col gap-2">
             {recentNotifications.map((n: Notification) => (

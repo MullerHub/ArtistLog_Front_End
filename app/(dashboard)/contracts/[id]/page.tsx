@@ -52,11 +52,11 @@ export default function ContractDetailPage() {
   });
 
   if (isLoading) {
-    return <p className="text-[var(--muted-foreground)]">Loading contract…</p>;
+    return <p className="text-[var(--muted-foreground)]">Carregando contrato…</p>;
   }
 
   if (isError || !contract) {
-    return <p className="text-red-600">Contract not found.</p>;
+    return <p className="text-red-600">Contrato não encontrado.</p>;
   }
 
   const myId = user?.id;
@@ -72,11 +72,11 @@ export default function ContractDetailPage() {
           type="button"
           onClick={() => router.back()}
           className="text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] focus:outline-none focus:underline"
-          aria-label="Go back"
+          aria-label="Voltar"
         >
-          ← Back
+          ← Voltar
         </button>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Contract Details</h1>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">Detalhes do Contrato</h1>
       </div>
 
       <Card className="border-[var(--border)] bg-[var(--card)]">
@@ -90,10 +90,10 @@ export default function ContractDetailPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {/* Parties */}
-          <section aria-label="Parties">
+          <section aria-label="Partes">
             <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 text-sm">
               <div>
-                <dt className="font-medium text-[var(--muted-foreground)]">Artist</dt>
+                <dt className="font-medium text-[var(--muted-foreground)]">Artista</dt>
                 <dd className="text-[var(--foreground)]">{contract.artist_name ?? contract.artist_id}</dd>
               </div>
               <div>
@@ -104,18 +104,18 @@ export default function ContractDetailPage() {
           </section>
 
           {/* Event details */}
-          <section aria-label="Event details">
+          <section aria-label="Detalhes do evento">
             <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3 text-sm">
               <div>
-                <dt className="font-medium text-[var(--muted-foreground)]">Date</dt>
+                <dt className="font-medium text-[var(--muted-foreground)]">Data</dt>
                 <dd className="text-[var(--foreground)]">{contract.date}</dd>
               </div>
               <div>
-                <dt className="font-medium text-[var(--muted-foreground)]">Time</dt>
+                <dt className="font-medium text-[var(--muted-foreground)]">Horário</dt>
                 <dd className="text-[var(--foreground)]">{contract.time}</dd>
               </div>
               <div>
-                <dt className="font-medium text-[var(--muted-foreground)]">Value</dt>
+                <dt className="font-medium text-[var(--muted-foreground)]">Valor</dt>
                 <dd className="text-[var(--foreground)]">
                   R${' '}
                   {contract.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -126,8 +126,8 @@ export default function ContractDetailPage() {
 
           {/* Details text */}
           {contract.details && (
-            <section aria-label="Additional details">
-              <p className="text-sm font-medium text-[var(--muted-foreground)]">Details</p>
+            <section aria-label="Detalhes adicionais">
+              <p className="text-sm font-medium text-[var(--muted-foreground)]">Detalhes</p>
               <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--foreground)]">
                 {contract.details}
               </p>
@@ -136,8 +136,7 @@ export default function ContractDetailPage() {
 
           {/* Tags */}
           {contract.tags?.length > 0 && (
-            <section aria-label="Tags">
-              <p className="mb-1 text-sm font-medium text-[var(--muted-foreground)]">Tags</p>
+            <section aria-label="Tags">              <p className="mb-1 text-sm font-medium text-[var(--muted-foreground)]">Tags</p>
               <div className="flex flex-wrap gap-1">
                 {contract.tags.map((tag) => (
                   <Badge key={tag} variant="secondary" className="text-xs">
@@ -150,11 +149,11 @@ export default function ContractDetailPage() {
 
           {/* Created at */}
           <p className="text-xs text-[var(--muted-foreground)]">
-            Created: {new Date(contract.created_at).toLocaleString()}
+            Criado em: {new Date(contract.created_at).toLocaleString('pt-BR')}
           </p>
 
           {/* Action buttons */}
-          <div className="flex flex-wrap gap-3 pt-2" role="group" aria-label="Contract actions">
+          <div className="flex flex-wrap gap-3 pt-2" role="group" aria-label="Ações do contrato">
             {contract.status === 'PENDING' && isRecipient && (
               <>
                 <Button
@@ -162,14 +161,14 @@ export default function ContractDetailPage() {
                   disabled={updateStatus.isPending}
                   onClick={() => updateStatus.mutate('ACCEPTED')}
                 >
-                  Accept
+                  Aceitar
                 </Button>
                 <Button
                   variant="destructive"
                   disabled={updateStatus.isPending}
                   onClick={() => updateStatus.mutate('REJECTED')}
                 >
-                  Reject
+                  Recusar
                 </Button>
               </>
             )}
@@ -180,20 +179,20 @@ export default function ContractDetailPage() {
                 disabled={updateStatus.isPending}
                 onClick={() => updateStatus.mutate('CANCELLED')}
               >
-                Cancel Contract
+                Cancelar Contrato
               </Button>
             )}
 
             {contract.status === 'ACCEPTED' && (
               <p className="text-sm font-medium text-green-600">
-                ✓ Contract accepted — no further actions required.
+                ✓ Contrato aceito — nenhuma ação necessária.
               </p>
             )}
           </div>
 
           {updateStatus.isError && (
             <p role="alert" className="text-sm text-red-600">
-              Action failed. Please try again.
+              Ação falhou. Tente novamente.
             </p>
           )}
         </CardContent>

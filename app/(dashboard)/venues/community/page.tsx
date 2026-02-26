@@ -55,11 +55,11 @@ export default function CommunityVenuesPage() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Community Venues</h1>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">Venues da Comunidade</h1>
         {role === 'ARTIST' && (
           <Link href="/venues/community/new">
             <Button className="bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-violet-700">
-              + Add Venue
+              + Adicionar Venue
             </Button>
           </Link>
         )}
@@ -67,20 +67,20 @@ export default function CommunityVenuesPage() {
 
       {/* City filter */}
       <div className="flex flex-col gap-1 max-w-xs">
-        <Label htmlFor="city_filter">Filter by City</Label>
+        <Label htmlFor="city_filter">Filtrar por Cidade</Label>
         <Input
           id="city_filter"
           value={cityFilter}
           onChange={(e) => setCityFilter(e.target.value)}
-          placeholder="e.g. São Paulo"
+          placeholder="ex.: São Paulo"
         />
       </div>
 
       {/* List */}
       {isLoading ? (
-        <p className="text-[var(--muted-foreground)]">Loading venues…</p>
+        <p className="text-[var(--muted-foreground)]">Carregando venues…</p>
       ) : filtered.length === 0 ? (
-        <p className="text-[var(--muted-foreground)]">No community venues found.</p>
+        <p className="text-[var(--muted-foreground)]">Nenhum venue da comunidade encontrado.</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((venue) => (
@@ -113,7 +113,7 @@ export default function CommunityVenuesPage() {
                     onClick={() => claimMutation.mutate(venue.id)}
                     className="self-start"
                   >
-                    Claim Venue
+                    Reivindicar Venue
                   </Button>
                 )}
               </CardContent>

@@ -134,7 +134,7 @@ export const CitySearch = ({
 
       {loading && (
         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-          Loading…
+          Buscando…
         </div>
       )}
 
@@ -143,7 +143,7 @@ export const CitySearch = ({
           ref={listRef}
           id={listboxId}
           role="listbox"
-          aria-label="City suggestions"
+          aria-label="Sugestões de cidade"
           className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-md"
         >
           {results.map((city, index) => (

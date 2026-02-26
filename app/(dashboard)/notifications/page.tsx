@@ -21,11 +21,11 @@ const NOTIFICATION_TYPES: NotificationType[] = [
 ];
 
 const FRIENDLY_NAMES: Record<NotificationType, string> = {
-  CONTRACT_PROPOSAL: 'Contract Proposal',
-  CONTRACT_STATUS_CHANGE: 'Contract Status Change',
-  REVIEW_RECEIVED: 'Review Received',
-  COMMUNITY_VENUE_CLAIMED: 'Community Venue Claimed',
-  WELCOME: 'Welcome',
+  CONTRACT_PROPOSAL: 'Proposta de Contrato',
+  CONTRACT_STATUS_CHANGE: 'Mudança de Status do Contrato',
+  REVIEW_RECEIVED: 'Avaliação Recebida',
+  COMMUNITY_VENUE_CLAIMED: 'Venue da Comunidade Reivindicado',
+  WELCOME: 'Boas-vindas',
 };
 
 type FilterType = 'all' | 'unread';
@@ -69,10 +69,10 @@ export default function NotificationsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notification-preferences'] });
-      toast({ title: 'Preferences saved', variant: 'success' });
+      toast({ title: 'Preferências salvas', variant: 'success' });
     },
     onError: () => {
-      toast({ title: 'Failed to save preferences', variant: 'destructive' });
+      toast({ title: 'Falha ao salvar preferências', variant: 'destructive' });
     },
   });
 
@@ -100,7 +100,7 @@ export default function NotificationsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bell className="h-6 w-6 text-[var(--primary)]" aria-hidden="true" />
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Notification Center</h1>
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">Central de Notificações</h1>
           {unreadCount > 0 && (
             <Badge className="bg-[var(--primary)] text-[var(--primary-foreground)]">
               {unreadCount}
@@ -113,21 +113,21 @@ export default function NotificationsPage() {
             disabled={markAllRead.isPending}
             onClick={() => markAllRead.mutate()}
           >
-            Mark all as read
+            Marcar todas como lidas
           </Button>
         )}
       </div>
 
       <Tabs defaultValue="notifications">
         <TabsList>
-          <TabsTrigger value="notifications">All Notifications</TabsTrigger>
-          <TabsTrigger value="preferences">Preferences</TabsTrigger>
+          <TabsTrigger value="notifications">Todas as Notificações</TabsTrigger>
+          <TabsTrigger value="preferences">Preferências</TabsTrigger>
         </TabsList>
 
         {/* All Notifications tab */}
         <TabsContent value="notifications">
           {/* Filter buttons */}
-          <div className="flex gap-2 mb-4 mt-4" role="group" aria-label="Filter notifications">
+          <div className="flex gap-2 mb-4 mt-4" role="group" aria-label="Filtrar notificações">
             {(['all', 'unread'] as FilterType[]).map((f) => (
               <button
                 key={f}
@@ -140,7 +140,7 @@ export default function NotificationsPage() {
                     : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--secondary)]',
                 ].join(' ')}
               >
-                {f === 'all' ? 'All' : 'Unread'}
+                {f === 'all' ? 'Todas' : 'Não lidas'}
               </button>
             ))}
           </div>
@@ -154,7 +154,7 @@ export default function NotificationsPage() {
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 text-[var(--muted-foreground)]">
               <Bell className="h-10 w-10" aria-hidden="true" />
-              <p>No notifications yet</p>
+              <p>Nenhuma notificação ainda</p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -184,10 +184,10 @@ export default function NotificationsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-[var(--muted)] text-[var(--muted-foreground)]">
-                      <th className="text-left px-4 py-3 font-medium">Notification Type</th>
-                      <th className="text-center px-4 py-3 font-medium">Email</th>
+                      <th className="text-left px-4 py-3 font-medium">Tipo de Notificação</th>
+                      <th className="text-center px-4 py-3 font-medium">E-mail</th>
                       <th className="text-center px-4 py-3 font-medium">Push</th>
-                      <th className="text-center px-4 py-3 font-medium">In-App</th>
+                      <th className="text-center px-4 py-3 font-medium">No App</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border)]">
@@ -227,7 +227,7 @@ export default function NotificationsPage() {
                   disabled={savePrefs.isPending}
                   onClick={() => savePrefs.mutate(allPrefs)}
                 >
-                  {savePrefs.isPending ? 'Saving…' : 'Save Preferences'}
+                  {savePrefs.isPending ? 'Salvando…' : 'Salvar Preferências'}
                 </Button>
               </div>
             </div>
