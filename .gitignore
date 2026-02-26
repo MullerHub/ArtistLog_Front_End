@@ -1,0 +1,80 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+node_modules/
+/node_modules
+.pnpm
+.pnpm-workspace-state-v1.json
+yarn.lock
+package-lock.json
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Next.js build output (NEVER commit build artifacts)
+/.next/
+/out/
+/dist/
+.next/
+out/
+dist/
+
+# Production
+/build
+
+# Testing
+/coverage
+.nyc_output
+
+# Environment variables (NEVER commit secrets!)
+.env
+.env.local
+.env.*.local
+.env.production.local
+
+# IDE & Editor
+.vscode/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# OS Files (macOS/Windows)
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.pem
+
+# Cache & Temporary
+.turbo/
+.cache/
+.eslintcache
+
+# Debug logs
+npm-debug.log*
+npm-debug.log*.*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+pnpm-debug.log*.*
+lerna-debug.log*
+.pnpm-debug.log
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Public uploads (use cloud storage, not git)
+public/uploads/*
+!public/uploads/.gitkeep
