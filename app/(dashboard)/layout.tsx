@@ -18,9 +18,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
     setChecking(false);
 
+    let cancelled = false;
     notifications.getNotifications().then((list) => {
-      setUnreadCount(list.filter((n) => !n.read).length);
-    }).catch((err) => { console.error('Failed to fetch notifications:', err); });
+      if (!cancelled) setUnreadCount(list.filter((n) => !n.read).length);
+    }).catch((err) => { if (!cancelled) console.error('Failed to fetch notifications:', err); });
+    return () => { cancelled = true; };
   }, [router]);
 
   if (checking) {
