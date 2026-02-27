@@ -36,6 +36,14 @@ const normalizeWebsite = (value?: string) => {
   return `https://${trimmed}`
 }
 
+const parseListInput = (value?: string) => {
+  if (!value) return []
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
 const artistProfileSchema = z.object({
   stage_name: z.string().min(2).max(150).optional(),
   bio: z.string().max(500).optional(),
@@ -47,6 +55,7 @@ const artistProfileSchema = z.object({
     .trim()
     .transform((val) => normalizeWebsite(val))
     .pipe(z.string().url("Website deve ser uma URL válida").optional()),
+  genres: z.string().max(300, "Máximo de 300 caracteres").optional(),
   phone: z
     .string()
     .optional()
@@ -195,6 +204,7 @@ function ArtistProfileSettings() {
       reset({
         stage_name: artistData.stage_name || "",
         bio: artistData.bio || "",
+        genres: (artistData.genres || artistData.tags || []).join(", "),
         cache_base: artistData.cache_base || undefined,
         email: artistData.email || "",
         website: artistData.website || "",
@@ -219,6 +229,7 @@ function ArtistProfileSettings() {
       const normalizedWhatsapp = unformatPhoneNumber(data.whatsapp || "")
       const normalizedEmail = data.email?.trim() || ""
       const normalizedWebsite = normalizeWebsite(data.website)
+      const normalizedGenres = parseListInput(data.genres)
 
       const normalizedData: ArtistProfileForm = {
         ...data,
@@ -237,6 +248,11 @@ function ArtistProfileSettings() {
       })
 
       const profileData: Record<string, any> = { ...cleanData, photo_urls: photoUrls }
+      if (normalizedGenres.length > 0) {
+        profileData.genres = normalizedGenres
+        profileData.event_types = normalizedGenres
+        profileData.tags = normalizedGenres
+      }
       if (profilePhoto) {
         profileData.profile_photo = profilePhoto
       }
@@ -332,6 +348,18 @@ function ArtistProfileSettings() {
           <div className="flex flex-col gap-2">
             <Label htmlFor="bio">Bio</Label>
             <Textarea id="bio" placeholder="Fale sobre voce..." rows={3} {...register("bio")} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="genres">Generos e tipos de evento</Label>
+            <Input
+              id="genres"
+              placeholder="Open Format, 15 anos, Balada, Eletronica"
+              {...register("genres")}
+            />
+            <p className="text-xs text-muted-foreground">
+              Separe por vírgula os estilos que você toca ou eventos que mais atende.
+            </p>
+            {errors.genres && <p className="text-sm text-destructive">{errors.genres.message}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="cache_base">Cache Base (R$)</Label>
