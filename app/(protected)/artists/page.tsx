@@ -25,9 +25,10 @@ export default function ArtistsPage() {
   const limit = 20
 
   const debouncedSearch = useDebounce(search, 300)
+  const searchQuery = debouncedSearch.trim()
 
   const filters: ArtistFilterParams = {
-    q: debouncedSearch || undefined,
+    q: searchQuery.length > 0 ? searchQuery : undefined,
     available: availableOnly || undefined,
     tags: selectedTags.length > 0 ? selectedTags.join(",") : undefined,
     limit,
@@ -39,6 +40,15 @@ export default function ArtistsPage() {
   const { data, isLoading, error } = useSWR<ArtistListResponse>(
     ["artists", filterKey],
     () => artistsService.getAll(filters),
+    { revalidateOnFocus: false }
+  )
+
+  const isGeoFilterActive = !!userLocation && radiusKm > 0
+  const shouldFetchAll = searchQuery.length > 0 && !isGeoFilterActive
+
+  const { data: allArtistsData, isLoading: isAllArtistsLoading } = useSWR<ArtistListResponse>(
+    shouldFetchAll ? ["artists-all"] : null,
+    () => artistsService.getAll({ limit: 500, offset: 0 }),
     { revalidateOnFocus: false }
   )
 
@@ -85,21 +95,41 @@ export default function ArtistsPage() {
     setLocationError(null)
   }
 
-  const artists = data?.items || []
-  const isGeoFilterActive = !!userLocation && radiusKm > 0
+  const artists = shouldFetchAll ? allArtistsData?.items || [] : data?.items || []
 
   const filteredArtists = useMemo(() => {
-    if (!isGeoFilterActive) return artists
+    let list = artists
 
-    return artists.filter((artist) => {
+    if (searchQuery.length > 0) {
+      const normalizedSearch = searchQuery.toLowerCase()
+      list = list.filter((artist) =>
+        (artist.stage_name || "").toLowerCase().includes(normalizedSearch)
+      )
+    }
+
+    if (availableOnly) {
+      list = list.filter((artist) => artist.is_available)
+    }
+
+    if (selectedTags.length > 0) {
+      list = list.filter((artist) =>
+        (artist.tags || []).some((tag) => selectedTags.includes(tag))
+      )
+    }
+
+    if (!isGeoFilterActive) return list
+
+    return list.filter((artist) => {
       const point = artist.current_location || artist.base_location
       if (!point) return false
       return calculateDistance(userLocation as GeoPoint, point) <= radiusKm
     })
-  }, [artists, isGeoFilterActive, radiusKm, userLocation])
+  }, [artists, availableOnly, isGeoFilterActive, radiusKm, searchQuery, selectedTags, userLocation])
 
-  const total = isGeoFilterActive ? filteredArtists.length : data?.total || 0
-  const hasMore = !isGeoFilterActive && offset + limit < (data?.total || 0)
+  const hasClientFilters = searchQuery.length > 0 || availableOnly || selectedTags.length > 0 || isGeoFilterActive
+  const total = hasClientFilters ? filteredArtists.length : data?.total || 0
+  const hasMore = !hasClientFilters && offset + limit < (data?.total || 0)
+  const isFallbackLoading = shouldFetchAll && isAllArtistsLoading
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -161,7 +191,7 @@ export default function ArtistsPage() {
             )}
           </div>
 
-          {isLoading && offset === 0 ? (
+          {(isLoading || isFallbackLoading) && offset === 0 ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
