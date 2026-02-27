@@ -59,6 +59,7 @@ export interface ArtistResponse {
   email?: string
   phone?: string
   whatsapp?: string
+  website?: string
   photo_urls?: string[]
   profile_photo?: string
   cache_base?: number
@@ -88,6 +89,7 @@ export interface UpdateArtistProfileRequest {
   tags?: string[]
   photo_urls?: string[]
   profile_photo?: string
+  website?: string
   soundcloud_links?: string[]
 }
 
