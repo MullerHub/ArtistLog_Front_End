@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -21,10 +21,12 @@ import { ProfilePhotoSelector } from "@/components/profile-photo-selector"
 import { useAuth } from "@/lib/auth-context"
 import { artistsService } from "@/lib/services/artists.service"
 import { venuesService } from "@/lib/services/venues.service"
-import { formatPhoneNumber } from "@/lib/formatters/phone"
+import { formatPhoneNumber, unformatPhoneNumber } from "@/lib/formatters/phone"
 import { formatDate } from "@/lib/formatters"
 import { API_BASE_URL } from "@/lib/api-client"
 import { toast } from "sonner"
+
+const phoneDigitsRegex = /^\d{10,11}$/
 
 const artistProfileSchema = z.object({
   stage_name: z.string().min(2).max(150).optional(),
@@ -32,8 +34,28 @@ const artistProfileSchema = z.object({
   cache_base: z.coerce.number().positive().optional(),
   is_available: z.boolean().optional(),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
-  phone: z.string().optional(),
-  whatsapp: z.string().optional(),
+  phone: z
+    .string()
+    .optional()
+    .refine(
+      (value) => {
+        if (!value) return true
+        const digits = unformatPhoneNumber(value)
+        return phoneDigitsRegex.test(digits)
+      },
+      { message: "Telefone inválido" }
+    ),
+  whatsapp: z
+    .string()
+    .optional()
+    .refine(
+      (value) => {
+        if (!value) return true
+        const digits = unformatPhoneNumber(value)
+        return phoneDigitsRegex.test(digits)
+      },
+      { message: "WhatsApp inválido" }
+    ),
 })
 
 const venueProfileSchema = z.object({
@@ -120,11 +142,29 @@ function ArtistProfileSettings() {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isValid },
   } = useForm<ArtistProfileForm>({
     resolver: zodResolver(artistProfileSchema),
     mode: "onChange",
   })
+
+  const setPhoneDigits = useCallback(
+    (field: "phone" | "whatsapp", value: string) => {
+      const digits = unformatPhoneNumber(value).slice(0, 11)
+      setValue(field, digits, { shouldValidate: true, shouldDirty: true })
+    },
+    [setValue]
+  )
+
+  const formatPhoneField = useCallback(
+    (field: "phone" | "whatsapp", value: string) => {
+      const digits = unformatPhoneNumber(value).slice(0, 11)
+      const formatted = formatPhoneNumber(digits)
+      setValue(field, formatted, { shouldValidate: true, shouldDirty: true })
+    },
+    [setValue]
+  )
 
   // Inicializar fotos e preencher form quando dados carregarem
   useEffect(() => {
@@ -144,8 +184,8 @@ function ArtistProfileSettings() {
         bio: artistData.bio || "",
         cache_base: artistData.cache_base || undefined,
         email: artistData.email || "",
-        phone: artistData.phone || "",
-        whatsapp: artistData.whatsapp || "",
+        phone: artistData.phone ? formatPhoneNumber(artistData.phone) : "",
+        whatsapp: artistData.whatsapp ? formatPhoneNumber(artistData.whatsapp) : "",
       })
     }
   }, [artistData, reset])
@@ -161,9 +201,20 @@ function ArtistProfileSettings() {
 
     setIsSubmitting(true)
     try {
+      const normalizedPhone = unformatPhoneNumber(data.phone || "")
+      const normalizedWhatsapp = unformatPhoneNumber(data.whatsapp || "")
+      const normalizedEmail = data.email?.trim() || ""
+
+      const normalizedData: ArtistProfileForm = {
+        ...data,
+        email: normalizedEmail,
+        phone: normalizedPhone || undefined,
+        whatsapp: normalizedWhatsapp || undefined,
+      }
+
       // Remover campos vazios/undefined para não enviar ao backend
       const cleanData: Record<string, any> = {}
-      Object.entries(data).forEach(([key, value]) => {
+      Object.entries(normalizedData).forEach(([key, value]) => {
         if (value !== undefined && value !== "" && value !== null) {
           cleanData[key] = value
         }
@@ -282,11 +333,31 @@ function ArtistProfileSettings() {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="phone">Telefone</Label>
-            <Input id="phone" type="tel" placeholder="(11) 99999-9999" {...register("phone")} />
+            <Input
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              placeholder="(11) 99999-9999"
+              {...register("phone", {
+                onChange: (e) => setPhoneDigits("phone", e.target.value),
+                onBlur: (e) => formatPhoneField("phone", e.target.value),
+              })}
+            />
+            {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="whatsapp">WhatsApp</Label>
-            <Input id="whatsapp" type="tel" placeholder="(11) 99999-9999" {...register("whatsapp")} />
+            <Input
+              id="whatsapp"
+              type="tel"
+              inputMode="numeric"
+              placeholder="(11) 99999-9999"
+              {...register("whatsapp", {
+                onChange: (e) => setPhoneDigits("whatsapp", e.target.value),
+                onBlur: (e) => formatPhoneField("whatsapp", e.target.value),
+              })}
+            />
+            {errors.whatsapp && <p className="text-sm text-destructive">{errors.whatsapp.message}</p>}
           </div>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
