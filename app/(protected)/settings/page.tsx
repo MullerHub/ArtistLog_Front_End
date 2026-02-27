@@ -31,6 +31,9 @@ const artistProfileSchema = z.object({
   bio: z.string().max(500).optional(),
   cache_base: z.coerce.number().positive().optional(),
   is_available: z.boolean().optional(),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  whatsapp: z.string().optional(),
 })
 
 const venueProfileSchema = z.object({
@@ -140,6 +143,9 @@ function ArtistProfileSettings() {
         stage_name: artistData.stage_name || "",
         bio: artistData.bio || "",
         cache_base: artistData.cache_base || undefined,
+        email: artistData.email || "",
+        phone: artistData.phone || "",
+        whatsapp: artistData.whatsapp || "",
       })
     }
   }, [artistData, reset])
@@ -263,6 +269,24 @@ function ArtistProfileSettings() {
           <div className="flex flex-col gap-2">
             <Label htmlFor="cache_base">Cache Base (R$)</Label>
             <Input id="cache_base" type="number" placeholder="500" {...register("cache_base")} />
+          </div>
+          <Separator />
+          <div className="mt-2 mb-2">
+            <h3 className="font-semibold text-foreground">Informacoes de Contato</h3>
+            <p className="text-xs text-muted-foreground">Publico para clientes em potencial</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="email">Email para Contato</Label>
+            <Input id="email" type="email" placeholder="seu@email.com" {...register("email")} />
+            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="phone">Telefone</Label>
+            <Input id="phone" type="tel" placeholder="(11) 99999-9999" {...register("phone")} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="whatsapp">WhatsApp</Label>
+            <Input id="whatsapp" type="tel" placeholder="(11) 99999-9999" {...register("whatsapp")} />
           </div>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
