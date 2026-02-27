@@ -42,8 +42,15 @@ function LocationInfo({ artist, userLocation }: LocationInfoProps) {
     [artist.current_location, normalizePoint]
   )
 
-  const baseLocation = normalizePoint(artist.base_location)
-  const currentLocation = hasCurrentLocation ? normalizePoint(artist.current_location) : null
+  const baseLocation = useMemo(
+    () => normalizePoint(artist.base_location),
+    [artist.base_location, normalizePoint]
+  )
+
+  const currentLocation = useMemo(
+    () => (hasCurrentLocation ? normalizePoint(artist.current_location) : null),
+    [artist.current_location, hasCurrentLocation, normalizePoint]
+  )
 
   useEffect(() => {
     let isMounted = true
