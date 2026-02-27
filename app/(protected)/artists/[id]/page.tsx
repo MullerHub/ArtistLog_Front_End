@@ -8,6 +8,7 @@ import {
   Star,
   MapPin,
   Music,
+  Music2,
   Calendar,
   Loader2,
   DollarSign,
@@ -191,6 +192,8 @@ export default function ArtistDetailPage({
     )
   }
 
+  const artistGenres = artist.genres && artist.genres.length > 0 ? artist.genres : artist.tags || []
+
   return (
     <div className="mx-auto max-w-4xl">
       <Link href="/artists" className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" aria-label="Voltar para lista de artistas">
@@ -245,9 +248,9 @@ export default function ArtistDetailPage({
                 </span>
               </div>
 
-              {artist.tags && artist.tags.length > 0 && (
+              {artistGenres.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {artist.tags.map((tag) => (
+                  {artistGenres.map((tag) => (
                     <Badge key={tag} variant="outline">
                       {tag}
                     </Badge>
@@ -270,7 +273,7 @@ export default function ArtistDetailPage({
         </Card>
 
         {/* Contact Information */}
-        {(artist.email || artist.phone || artist.whatsapp || artist.website) && (
+        {(artist.email || artist.phone || artist.whatsapp || artist.website || (artist.soundcloud_links && artist.soundcloud_links.length > 0)) && (
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Contato</CardTitle>
@@ -333,6 +336,25 @@ export default function ArtistDetailPage({
                     >
                       {artist.website}
                     </a>
+                  </div>
+                </div>
+              )}
+              {artist.soundcloud_links && artist.soundcloud_links.length > 0 && (
+                <div className="flex items-start gap-3">
+                  <Music2 className="mt-1 h-5 w-5 text-primary" />
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs text-muted-foreground">SoundCloud</span>
+                    {artist.soundcloud_links.map((link, index) => (
+                      <a
+                        key={index}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-foreground hover:underline"
+                      >
+                        {link.length > 50 ? `${link.substring(0, 50)}...` : link}
+                      </a>
+                    ))}
                   </div>
                 </div>
               )}
