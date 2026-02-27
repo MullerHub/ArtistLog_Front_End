@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
 import { NotificationCenter } from "@/components/notification-center"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface NavItem {
   label: string
@@ -100,14 +101,17 @@ export function MobileNav() {
                 </div>
               </div>
             )}
-            <Link
-              href="/settings"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <Settings className="h-4 w-4" />
-              Configuracoes
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/settings"
+                onClick={() => setOpen(false)}
+                className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <Settings className="h-4 w-4" />
+                Configuracoes
+              </Link>
+              <ThemeToggle />
+            </div>
             <Button
               variant="ghost"
               className="justify-start gap-3 text-muted-foreground hover:text-destructive"
@@ -129,6 +133,9 @@ export function MobileNav() {
         </div>
         <span className="font-bold text-foreground">ArtistLog</span>
       </Link>
-      <NotificationCenter />    </header>
+      <div className="flex items-center gap-1">
+        <ThemeToggle />
+        <NotificationCenter />
+      </div>    </header>
   )
 }
