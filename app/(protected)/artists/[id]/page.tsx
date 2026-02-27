@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useEffect, useMemo, useState } from "react"
+import { use, useCallback, useEffect, useMemo, useState } from "react"
 import useSWR from "swr"
 import Link from "next/link"
 import {
@@ -22,6 +22,7 @@ import { artistsService } from "@/lib/services/artists.service"
 import { schedulesService } from "@/lib/services/schedules.service"
 import { formatCurrency, formatRating, formatDayOfWeek, formatDate } from "@/lib/formatters"
 import { getCityFromCoordinates } from "@/lib/city-api"
+import { API_BASE_URL } from "@/lib/api-client"
 import type { ArtistResponse, GeoPoint, ScheduleResponse } from "@/lib/types"
 
 export default function ArtistDetailPage({
@@ -32,38 +33,100 @@ export default function ArtistDetailPage({
   const { id } = use(params)
   const { user } = useAuth()
 
-  const { data: artist, isLoading, error } = useSWR<ArtistResponse>(
+  const { data: artist, isLoading, error, mutate } = useSWR<ArtistResponse>(
     ["artist", id],
-    () => artistsService.getById(id)
+    () => artistsService.getById(id),
+    { revalidateOnFocus: true, revalidateIfStale: true }
   )
+
+  // Revalidate when page becomes visible (user returns from settings)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        mutate(undefined, { revalidate: true })
+      }
+    }
+
+    // Also revalidate on page focus
+    const handleFocus = () => {
+      mutate(undefined, { revalidate: true })
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    window.addEventListener("focus", handleFocus)
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      window.removeEventListener("focus", handleFocus)
+    }
+  }, [mutate])
 
   const [baseCity, setBaseCity] = useState<string | null>(null)
   const [currentCity, setCurrentCity] = useState<string | null>(null)
   const [isLocating, setIsLocating] = useState(false)
 
+  const normalizePoint = useCallback((point?: GeoPoint | null) => {
+    if (!point) return null
+    const latRaw = (point as { latitude?: unknown }).latitude
+    const lngRaw = (point as { longitude?: unknown }).longitude
+    const latitude = typeof latRaw === "string" ? Number(latRaw) : latRaw
+    const longitude = typeof lngRaw === "string" ? Number(lngRaw) : lngRaw
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null
+    if (latitude === 0 && longitude === 0) return null
+
+    return { latitude: latitude as number, longitude: longitude as number }
+  }, [])
+
+  const hasValidPoint = useCallback(
+    (point?: GeoPoint | null) => !!normalizePoint(point),
+    [normalizePoint]
+  )
+
   const hasCurrentLocation = useMemo(() => {
-    return !!(
-      artist?.current_location &&
-      (artist.current_location.latitude !== 0 || artist.current_location.longitude !== 0)
-    )
-  }, [artist?.current_location])
+    return hasValidPoint(artist?.current_location)
+  }, [artist?.current_location, hasValidPoint])
+
+  const hasBaseLocation = useMemo(() => {
+    return hasValidPoint(artist?.base_location)
+  }, [artist?.base_location, hasValidPoint])
 
   const isVenue = user?.role === "VENUE"
+
+  const resolvePhotoUrl = useCallback((photoUrl?: string | null) => {
+    if (!photoUrl) return null
+    return photoUrl.startsWith("http") ? photoUrl : `${API_BASE_URL}${photoUrl}`
+  }, [])
+
+  const baseFallbackCity = useMemo(() => {
+    if (!artist) return null
+    const city = (artist as { city?: string }).city
+    const state = (artist as { state?: string }).state
+    if (!city) return null
+    return state ? `${city} - ${state}` : city
+  }, [artist])
+
+  const formatCoords = useCallback(
+    (point?: GeoPoint | null) => {
+      const normalized = normalizePoint(point)
+      if (!normalized) return "Nao informada"
+      return `${normalized.latitude.toFixed(2)}, ${normalized.longitude.toFixed(2)}`
+    },
+    [normalizePoint]
+  )
 
   useEffect(() => {
     let isMounted = true
 
     async function fetchLocations() {
-      if (!artist?.base_location && !artist?.current_location) return
+      if (!hasBaseLocation && !hasCurrentLocation) return
       setIsLocating(true)
 
+      const normalizedBase = normalizePoint(artist?.base_location)
+      const normalizedCurrent = normalizePoint(artist?.current_location)
+
       const [base, current] = await Promise.all([
-        artist?.base_location
-          ? getCityFromCoordinates(artist.base_location)
-          : Promise.resolve(null),
-        hasCurrentLocation && artist?.current_location
-          ? getCityFromCoordinates(artist.current_location)
-          : Promise.resolve(null),
+        normalizedBase ? getCityFromCoordinates(normalizedBase) : Promise.resolve(null),
+        normalizedCurrent ? getCityFromCoordinates(normalizedCurrent) : Promise.resolve(null),
       ])
 
       if (!isMounted) return
@@ -78,25 +141,21 @@ export default function ArtistDetailPage({
     return () => {
       isMounted = false
     }
-  }, [artist?.base_location, artist?.current_location, hasCurrentLocation])
-
-  const formatCoords = (point?: GeoPoint | null) => {
-    if (!point || point.latitude === undefined || point.latitude === null) return "Nao informada"
-    return `${point.latitude.toFixed(2)}, ${point.longitude.toFixed(2)}`
-  }
+  }, [artist?.base_location, artist?.current_location, hasBaseLocation, hasCurrentLocation, normalizePoint])
 
   const baseLabel = useMemo(() => {
     if (baseCity) return baseCity
+    if (baseFallbackCity) return baseFallbackCity
     if (isLocating) return "Localizando..."
     return formatCoords(artist?.base_location)
-  }, [baseCity, isLocating, artist?.base_location])
+  }, [baseCity, baseFallbackCity, formatCoords, isLocating, artist?.base_location])
 
   const currentLabel = useMemo(() => {
     if (currentCity) return currentCity
     if (!hasCurrentLocation) return "Nao informada"
     if (isLocating) return "Localizando..."
     return formatCoords(artist?.current_location)
-  }, [currentCity, hasCurrentLocation, isLocating, artist?.current_location])
+  }, [currentCity, formatCoords, hasCurrentLocation, isLocating, artist?.current_location])
 
   if (isLoading) {
     return (
@@ -131,10 +190,10 @@ export default function ArtistDetailPage({
         {/* Header */}
         <Card>
           <CardContent className="flex flex-col gap-4 p-6 md:flex-row md:items-start md:gap-6">
-            {artist.photo_urls && artist.photo_urls.length > 0 ? (
+            {artist.profile_photo || (artist.photo_urls && artist.photo_urls.length > 0) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={artist.photo_urls[0]}
+                src={resolvePhotoUrl(artist.profile_photo || artist.photo_urls?.[0]) || ""}
                 alt={artist.stage_name}
                 className="h-24 w-24 flex-shrink-0 rounded-xl object-cover"
               />
@@ -285,7 +344,7 @@ function ArtistSchedulePreview({ artistId }: { artistId: string }) {
                   {slot.start_time} - {slot.end_time}
                 </span>
                 {slot.crosses_midnight && (
-                  <span className="text-xs font-semibold text-amber-600">próx. dia</span>
+                  <span className="text-xs font-semibold text-amber-600">proximo dia</span>
                 )}
               </div>
               <Badge
