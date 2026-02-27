@@ -22,16 +22,28 @@ function LocationInfo({ artist, userLocation }: LocationInfoProps) {
   const [currentCity, setCurrentCity] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  const normalizePoint = useCallback((point?: GeoPoint | null) => {
+    if (!point) return null
+    
+    // Handle both lowercase (latitude/longitude) and uppercase (Latitude/Longitude) from backend
+    const latRaw = (point as any).latitude ?? (point as any).Latitude
+    const lngRaw = (point as any).longitude ?? (point as any).Longitude
+    const latitude = typeof latRaw === "string" ? Number(latRaw) : latRaw
+    const longitude = typeof lngRaw === "string" ? Number(lngRaw) : lngRaw
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null
+    if (latitude === 0 && longitude === 0) return null
+
+    return { latitude: latitude as number, longitude: longitude as number }
+  }, [])
+
   const hasCurrentLocation = useMemo(
-    () =>
-      artist.current_location &&
-      (artist.current_location.latitude !== 0 ||
-        artist.current_location.longitude !== 0),
-    [artist.current_location]
+    () => !!normalizePoint(artist.current_location),
+    [artist.current_location, normalizePoint]
   )
 
-  const baseLocation = artist.base_location || null
-  const currentLocation = hasCurrentLocation ? artist.current_location || null : null
+  const baseLocation = normalizePoint(artist.base_location)
+  const currentLocation = hasCurrentLocation ? normalizePoint(artist.current_location) : null
 
   useEffect(() => {
     let isMounted = true
