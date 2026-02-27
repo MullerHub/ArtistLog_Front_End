@@ -66,6 +66,7 @@ export interface ArtistResponse {
   is_available: boolean
   rating: number
   tags?: string[]
+  genres?: string[]
   base_location?: GeoPoint
   current_location?: GeoPoint
   city?: string
@@ -87,6 +88,7 @@ export interface UpdateArtistProfileRequest {
   cache_base?: number
   is_available?: boolean
   tags?: string[]
+  genres?: string[]
   photo_urls?: string[]
   profile_photo?: string
   website?: string
@@ -352,6 +354,8 @@ export interface PaginationParams {
 export interface ArtistFilters extends PaginationParams {
   available?: boolean
   tags?: string
+  genres?: string
+  event_types?: string
   q?: string
 }
 
