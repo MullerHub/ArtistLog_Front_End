@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { NotificationCenter } from "@/components/notification-center"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface NavItem {
   label: string
@@ -94,13 +95,16 @@ export function AppSidebar() {
             </div>
           </div>
         )}
-        <Link
-          href="/settings"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          <Settings className="h-4 w-4" />
-          Configuracoes
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/settings"
+            className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Settings className="h-4 w-4" />
+            Configuracoes
+          </Link>
+          <ThemeToggle />
+        </div>
 
         <Button
           variant="ghost"
