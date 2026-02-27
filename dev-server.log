@@ -1,0 +1,12 @@
+
+> my-project@0.1.0 dev /Volumes/programacao/ArtistLog/ArtistLog_Front_End
+> next dev -p 3000
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.5:3000
+
+✓ Starting...
+✓ Ready in 998ms
+ GET / 200 in 2.3s (compile: 2.1s, render: 200ms)
+ GET /login 200 in 378ms (compile: 256ms, render: 122ms)

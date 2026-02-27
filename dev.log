@@ -1,0 +1,16 @@
+
+> my-project@0.1.0 dev:3001 /Volumes/programacao/ArtistLog/ArtistLog_Front_End
+> next dev -p 3001
+
+⨯ Failed to start server
+Error: listen EADDRINUSE: address already in use :::3001
+    at <unknown> (Error: listen EADDRINUSE: address already in use :::3001)
+    at new Promise (<anonymous>) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 3001
+}
+[?25h
+ ELIFECYCLE  Command failed with exit code 1.
