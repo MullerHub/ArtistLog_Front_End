@@ -66,8 +66,10 @@ export default function ArtistDetailPage({
 
   const normalizePoint = useCallback((point?: GeoPoint | null) => {
     if (!point) return null
-    const latRaw = (point as { latitude?: unknown }).latitude
-    const lngRaw = (point as { longitude?: unknown }).longitude
+    
+    // Handle both lowercase (latitude/longitude) and uppercase (Latitude/Longitude) from backend
+    const latRaw = (point as any).latitude ?? (point as any).Latitude
+    const lngRaw = (point as any).longitude ?? (point as any).Longitude
     const latitude = typeof latRaw === "string" ? Number(latRaw) : latRaw
     const longitude = typeof lngRaw === "string" ? Number(lngRaw) : lngRaw
 
