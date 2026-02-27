@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { PhotoUpload } from "@/components/photo-upload"
@@ -103,6 +104,12 @@ const sanitizePhotoUrls = (urls?: string[]) =>
       url && url !== "/" && url !== API_BASE_URL && url !== `${API_BASE_URL}/`
   )
 
+const GENRE_SUGGESTIONS = [
+  "Open Format", "15 anos", "Balada", "Eletronica", "House", "Techno",
+  "Sertanejo", "Funk", "Pop", "Rock", "Hip-Hop", "Jazz", "MPB",
+  "Casamento", "Corporativo", "Aniversario", "Formatura"
+]
+
 export default function SettingsPage() {
   const { user } = useAuth()
 
@@ -153,12 +160,6 @@ function ArtistProfileSettings() {
   const [showErrors, setShowErrors] = useState(false)
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false)
   const [locationUpdatedAt, setLocationUpdatedAt] = useState<string | null>(null)
-
-  const GENRE_SUGGESTIONS = [
-    "Open Format", "15 anos", "Balada", "Eletronica", "House", "Techno",
-    "Sertanejo", "Funk", "Pop", "Rock", "Hip-Hop", "Jazz", "MPB",
-    "Casamento", "Corporativo", "Aniversario", "Formatura"
-  ]
 
   // Carregar dados do perfil existente
   const { data: artistData } = useSWR(
