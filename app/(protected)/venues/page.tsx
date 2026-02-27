@@ -48,7 +48,7 @@ export default function VenuesPage() {
 
   const filters: VenueFilters = {
     q: isSearchActive ? searchQuery : undefined,
-    city: cityQuery.length > 0 ? cityQuery : undefined,
+    // Não enviar city para backend - fazemos substring matching no frontend
     origin: originFilter !== "ALL" ? originFilter : undefined,
     limit,
     offset,
@@ -115,7 +115,7 @@ export default function VenuesPage() {
     if (isGeoFilterActive) {
       let mapped = (nearbyData || []).map(mapNearbyToVenue)
       
-      // Aplicar filtro de cidade se ativo
+      // Aplicar filtro de cidade se ativo (substring matching)
       if (cityQuery) {
         mapped = mapped.filter((venue) => 
           venue.city.toLowerCase().includes(cityQuery.toLowerCase())
@@ -139,7 +139,15 @@ export default function VenuesPage() {
       return fallbackItems.filter((venue) => venue.venue_name.toLowerCase().includes(searchQuery.toLowerCase()))
     }
 
-    return data?.items || []
+    // Aplicar filtro de cidade no frontend com substring matching
+    let items = data?.items || []
+    if (cityQuery) {
+      items = items.filter((venue) => 
+        venue.city.toLowerCase().includes(cityQuery.toLowerCase())
+      )
+    }
+    
+    return items
   }, [allVenuesData?.items, data?.items, isGeoFilterActive, isSearchActive, mapNearbyToVenue, nearbyData, searchQuery, cityQuery])
 
   const total = isGeoFilterActive || isSearchActive ? venues.length : data?.total || 0
