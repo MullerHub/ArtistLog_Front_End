@@ -11,6 +11,9 @@ import {
   Calendar,
   Loader2,
   DollarSign,
+  Mail,
+  Phone,
+  MessageCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -258,6 +261,62 @@ export default function ArtistDetailPage({
             </div>
           </CardContent>
         </Card>
+
+        {/* Contact Information */}
+        {(artist.email || artist.phone || artist.whatsapp) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Contato</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {artist.email && (
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-primary" />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs text-muted-foreground">Email</span>
+                    <a
+                      href={`mailto:${artist.email}`}
+                      className="text-sm font-medium text-foreground hover:underline"
+                    >
+                      {artist.email}
+                    </a>
+                  </div>
+                </div>
+              )}
+              {artist.phone && (
+                <div className="flex items-center gap-3">
+                  <Phone className="h-5 w-5 text-primary" />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs text-muted-foreground">Telefone</span>
+                    <a
+                      href={`tel:${artist.phone}`}
+                      className="text-sm font-medium text-foreground hover:underline"
+                    >
+                      {artist.phone}
+                    </a>
+                  </div>
+                </div>
+              )}
+              {artist.whatsapp && (
+                <div className="flex items-center gap-3">
+                  <MessageCircle className="h-5 w-5 text-primary" />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs text-muted-foreground">WhatsApp</span>
+                    <a
+                      href={`https://wa.me/${artist.whatsapp.replace(/\D/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-foreground hover:underline"
+                    >
+                      {artist.whatsapp}
+                    </a>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+        
         {/* Contract Proposal Form - Only for Venues */}
         {isVenue && user && (
           <ContractProposalForm
