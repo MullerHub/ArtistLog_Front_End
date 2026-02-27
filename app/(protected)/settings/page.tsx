@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -21,6 +22,7 @@ import { useAuth } from "@/lib/auth-context"
 import { artistsService } from "@/lib/services/artists.service"
 import { venuesService } from "@/lib/services/venues.service"
 import { formatPhoneNumber } from "@/lib/formatters/phone"
+import { formatDate } from "@/lib/formatters"
 import { API_BASE_URL } from "@/lib/api-client"
 import { toast } from "sonner"
 
@@ -95,11 +97,14 @@ export default function SettingsPage() {
 }
 
 function ArtistProfileSettings() {
+  const router = useRouter()
   const { user } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [photoUrls, setPhotoUrls] = useState<string[]>([])
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
   const [showErrors, setShowErrors] = useState(false)
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false)
+  const [locationUpdatedAt, setLocationUpdatedAt] = useState<string | null>(null)
 
   // Carregar dados do perfil existente
   const { data: artistData } = useSWR(
@@ -178,6 +183,42 @@ function ArtistProfileSettings() {
     .map((error) => (typeof error?.message === "string" ? error.message : null))
     .filter((message): message is string => Boolean(message))
 
+  const handleUpdateLocation = () => {
+    if (!user) return
+
+    if (!navigator.geolocation) {
+      toast.error("Geolocalizacao nao suportada neste navegador")
+      return
+    }
+
+    setIsUpdatingLocation(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const response = await artistsService.updateLocation(user.id, {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          })
+          setLocationUpdatedAt(response.updated_at)
+          toast.success("Localizacao atualizada com sucesso")
+          
+          // Revalidate all SWR caches to refresh artist data
+          router.refresh()
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Erro ao atualizar localizacao"
+          toast.error(message)
+        } finally {
+          setIsUpdatingLocation(false)
+        }
+      },
+      () => {
+        toast.error("Nao foi possivel obter sua localizacao")
+        setIsUpdatingLocation(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
   return (
     <>
       <FormErrorsAlert errors={formErrors} isOpen={showErrors} onClose={() => setShowErrors(false)} />
@@ -239,6 +280,34 @@ function ArtistProfileSettings() {
         </CardContent>
       </form>
     </Card>
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <MapPin className="h-5 w-5 text-primary" />
+            Localizacao Atual
+          </CardTitle>
+          <CardDescription>
+            Atualize sua localizacao para aparecer em buscas por proximidade.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <Button type="button" variant="outline" onClick={handleUpdateLocation} disabled={isUpdatingLocation}>
+            {isUpdatingLocation ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Atualizando...
+              </>
+            ) : (
+              "Atualizar localizacao atual"
+            )}
+          </Button>
+          {locationUpdatedAt && (
+            <p className="text-xs text-muted-foreground">
+              Atualizada em {formatDate(locationUpdatedAt)}
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </>
   )
 }
