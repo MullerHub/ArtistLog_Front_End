@@ -264,7 +264,7 @@ export default function VenuesPage() {
               <SelectContent>
                 <SelectItem value="ALL">Todas</SelectItem>
                 <SelectItem value="OWNER">Verificadas</SelectItem>
-                <SelectItem value="COMMUNITY">Comunitárias</SelectItem>
+                <SelectItem value="COMMUNITY">Sugeridas</SelectItem>
               </SelectContent>
             </Select>
           </div>
