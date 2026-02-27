@@ -9,7 +9,8 @@ import type { ArtistResponse, GeoPoint } from "@/lib/types"
 import { formatCurrency, formatRating } from "@/lib/formatters"
 import { calculateDistance, formatDistance } from "@/lib/geo"
 import { getCityFromCoordinates } from "@/lib/city-api"
-import { useEffect, useState, useMemo } from "react"
+import { API_BASE_URL } from "@/lib/api-client"
+import { useEffect, useState, useMemo, useCallback } from "react"
 
 interface LocationInfoProps {
   artist: ArtistResponse
@@ -103,6 +104,11 @@ interface ArtistCardProps {
 export function ArtistCard({ artist, userLocation = null }: ArtistCardProps) {
   const hasPhoto = artist.photo_urls && artist.photo_urls.length > 0
 
+  const resolvePhotoUrl = useCallback((photoUrl?: string | null) => {
+    if (!photoUrl) return null
+    return photoUrl.startsWith("http") ? photoUrl : `${API_BASE_URL}${photoUrl}`
+  }, [])
+
   return (
     <Card className="flex flex-col transition-shadow hover:shadow-md">
       <CardContent className="flex flex-1 flex-col gap-3 p-5">
@@ -111,7 +117,7 @@ export function ArtistCard({ artist, userLocation = null }: ArtistCardProps) {
             {hasPhoto ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={artist.photo_urls[0]}
+                src={resolvePhotoUrl(artist.photo_urls[0]) || ""}
                 alt={artist.stage_name}
                 className="h-12 w-12 rounded-full object-cover"
               />
