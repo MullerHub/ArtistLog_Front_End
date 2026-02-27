@@ -152,10 +152,10 @@ export default function ArtistDetailPage({
 
   const currentLabel = useMemo(() => {
     if (currentCity) return currentCity
-    if (!hasCurrentLocation) return "Nao informada"
     if (isLocating) return "Localizando..."
-    return formatCoords(artist?.current_location)
-  }, [currentCity, formatCoords, hasCurrentLocation, isLocating, artist?.current_location])
+    const formatted = formatCoords(artist?.current_location)
+    return formatted
+  }, [currentCity, formatCoords, isLocating, artist?.current_location])
 
   if (isLoading) {
     return (
