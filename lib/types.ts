@@ -63,6 +63,7 @@ export interface ArtistResponse {
   phone?: string
   whatsapp?: string
   website?: string
+  soundcloud_links?: string[]
   photo_urls?: string[]
   profile_photo?: string
   cache_base?: number
@@ -92,8 +93,12 @@ export interface UpdateArtistProfileRequest {
   is_available?: boolean
   tags?: string[]
   genres?: string[]
+  event_types?: string[]
   photo_urls?: string[]
   profile_photo?: string
+  email?: string
+  phone?: string
+  whatsapp?: string
   website?: string
   soundcloud_links?: string[]
 }
