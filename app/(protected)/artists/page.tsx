@@ -15,6 +15,8 @@ import type { ArtistFilters as ArtistFilterParams, ArtistListResponse, GeoPoint 
 
 export default function ArtistsPage() {
   const [search, setSearch] = useState("")
+  const [genreSearch, setGenreSearch] = useState("")
+  const [eventTypeSearch, setEventTypeSearch] = useState("")
   const [availableOnly, setAvailableOnly] = useState(false)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [offset, setOffset] = useState(0)
@@ -25,12 +27,18 @@ export default function ArtistsPage() {
   const limit = 20
 
   const debouncedSearch = useDebounce(search, 300)
+  const debouncedGenreSearch = useDebounce(genreSearch, 300)
+  const debouncedEventTypeSearch = useDebounce(eventTypeSearch, 300)
   const searchQuery = debouncedSearch.trim()
+  const genreQuery = debouncedGenreSearch.trim()
+  const eventTypeQuery = debouncedEventTypeSearch.trim()
 
   const filters: ArtistFilterParams = {
     q: searchQuery.length > 0 ? searchQuery : undefined,
     available: availableOnly || undefined,
     tags: selectedTags.length > 0 ? selectedTags.join(",") : undefined,
+    genres: genreQuery.length > 0 ? genreQuery : undefined,
+    event_types: eventTypeQuery.length > 0 ? eventTypeQuery : undefined,
     limit,
     offset,
   }
@@ -54,7 +62,7 @@ export default function ArtistsPage() {
 
   useEffect(() => {
     setOffset(0)
-  }, [debouncedSearch, availableOnly, selectedTags])
+  }, [debouncedSearch, debouncedGenreSearch, debouncedEventTypeSearch, availableOnly, selectedTags])
 
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags((prev) =>
@@ -64,6 +72,8 @@ export default function ArtistsPage() {
 
   const clearFilters = useCallback(() => {
     setSearch("")
+    setGenreSearch("")
+    setEventTypeSearch("")
     setAvailableOnly(false)
     setSelectedTags([])
     setOffset(0)
@@ -100,6 +110,12 @@ export default function ArtistsPage() {
   const filteredArtists = useMemo(() => {
     let list = artists
 
+    const getArtistGenres = (artist: ArtistListResponse["items"][number]) => {
+      return (artist.genres && artist.genres.length > 0 ? artist.genres : artist.tags || []).map((item) =>
+        item.toLowerCase().trim()
+      )
+    }
+
     if (searchQuery.length > 0) {
       const normalizedSearch = searchQuery.toLowerCase()
       list = list.filter((artist) =>
@@ -112,9 +128,44 @@ export default function ArtistsPage() {
     }
 
     if (selectedTags.length > 0) {
+      const selected = selectedTags.map((tag) => tag.toLowerCase())
       list = list.filter((artist) =>
-        (artist.tags || []).some((tag) => selectedTags.includes(tag))
+        getArtistGenres(artist).some((tag) => selected.includes(tag))
       )
+    }
+
+    if (genreQuery.length > 0) {
+      const terms = genreQuery
+        .split(",")
+        .map((item) => item.trim().toLowerCase())
+        .filter(Boolean)
+
+      list = list.filter((artist) => {
+        const artistGenres = getArtistGenres(artist)
+        if (artistGenres.length === 0) return false
+        if (terms.length === 0) {
+          const fallbackQuery = genreQuery.toLowerCase()
+          return artistGenres.some((genre) => genre.includes(fallbackQuery))
+        }
+        return terms.every((term) => artistGenres.some((genre) => genre.includes(term)))
+      })
+    }
+
+    if (eventTypeQuery.length > 0) {
+      const terms = eventTypeQuery
+        .split(",")
+        .map((item) => item.trim().toLowerCase())
+        .filter(Boolean)
+
+      list = list.filter((artist) => {
+        const artistGenres = getArtistGenres(artist)
+        if (artistGenres.length === 0) return false
+        if (terms.length === 0) {
+          const fallbackQuery = eventTypeQuery.toLowerCase()
+          return artistGenres.some((genre) => genre.includes(fallbackQuery))
+        }
+        return terms.every((term) => artistGenres.some((genre) => genre.includes(term)))
+      })
     }
 
     if (!isGeoFilterActive) return list
@@ -124,9 +175,9 @@ export default function ArtistsPage() {
       if (!point) return false
       return calculateDistance(userLocation as GeoPoint, point) <= radiusKm
     })
-  }, [artists, availableOnly, isGeoFilterActive, radiusKm, searchQuery, selectedTags, userLocation])
+  }, [artists, availableOnly, eventTypeQuery, genreQuery, isGeoFilterActive, radiusKm, searchQuery, selectedTags, userLocation])
 
-  const hasClientFilters = searchQuery.length > 0 || availableOnly || selectedTags.length > 0 || isGeoFilterActive
+  const hasClientFilters = searchQuery.length > 0 || genreQuery.length > 0 || eventTypeQuery.length > 0 || availableOnly || selectedTags.length > 0 || isGeoFilterActive
   const total = hasClientFilters ? filteredArtists.length : data?.total || 0
   const hasMore = !hasClientFilters && offset + limit < (data?.total || 0)
   const isFallbackLoading = shouldFetchAll && isAllArtistsLoading
@@ -145,6 +196,10 @@ export default function ArtistsPage() {
           <ArtistFilters
             search={search}
             onSearchChange={setSearch}
+            genreSearch={genreSearch}
+            onGenreSearchChange={setGenreSearch}
+            eventTypeSearch={eventTypeSearch}
+            onEventTypeSearchChange={setEventTypeSearch}
             availableOnly={availableOnly}
             onAvailableChange={setAvailableOnly}
             selectedTags={selectedTags}
