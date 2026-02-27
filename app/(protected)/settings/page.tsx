@@ -153,6 +153,12 @@ function ArtistProfileSettings() {
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false)
   const [locationUpdatedAt, setLocationUpdatedAt] = useState<string | null>(null)
 
+  const GENRE_SUGGESTIONS = [
+    "Open Format", "15 anos", "Balada", "Eletronica", "House", "Techno",
+    "Sertanejo", "Funk", "Pop", "Rock", "Hip-Hop", "Jazz", "MPB",
+    "Casamento", "Corporativo", "Aniversario", "Formatura"
+  ]
+
   // Carregar dados do perfil existente
   const { data: artistData } = useSWR(
     user?.id ? ["artist-profile", user.id] : null,
@@ -165,11 +171,27 @@ function ArtistProfileSettings() {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors, isValid },
   } = useForm<ArtistProfileForm>({
     resolver: zodResolver(artistProfileSchema),
     mode: "onChange",
   })
+
+  const currentGenres = watch("genres") || ""
+
+  const addGenreSuggestion = useCallback(
+    (suggestion: string) => {
+      const current = currentGenres.trim()
+      const genresList = current ? current.split(",").map(g => g.trim()) : []
+      
+      if (!genresList.includes(suggestion)) {
+        const newGenres = [...genresList, suggestion].join(", ")
+        setValue("genres", newGenres, { shouldValidate: true, shouldDirty: true })
+      }
+    },
+    [currentGenres, setValue]
+  )
 
   const setPhoneDigits = useCallback(
     (field: "phone" | "whatsapp", value: string) => {
@@ -206,6 +228,7 @@ function ArtistProfileSettings() {
         bio: artistData.bio || "",
         genres: (artistData.genres || artistData.tags || []).join(", "),
         cache_base: artistData.cache_base || undefined,
+        is_available: artistData.is_available ?? true,
         email: artistData.email || "",
         website: artistData.website || "",
         phone: artistData.phone ? formatPhoneNumber(artistData.phone) : "",
@@ -349,13 +372,54 @@ function ArtistProfileSettings() {
             <Label htmlFor="bio">Bio</Label>
             <Textarea id="bio" placeholder="Fale sobre voce..." rows={3} {...register("bio")} />
           </div>
+          <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 p-3">
+            <div className="flex flex-col gap-0.5">
+              <Label htmlFor="is_available" className="cursor-pointer text-sm font-semibold">
+                Status de Disponibilidade
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {watch("is_available") ? "Você está visível e disponível para contratações" : "Você está indisponível no momento"}
+              </p>
+            </div>
+            <Switch
+              id="is_available"
+              checked={watch("is_available") ?? true}
+              onCheckedChange={(checked) => setValue("is_available", checked, { shouldDirty: true })}
+            />
+          </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="genres">Generos e tipos de evento</Label>
+            {artistData?.tags && artistData.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 rounded-md border border-border bg-muted/50 p-2">
+                {artistData.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
             <Input
               id="genres"
               placeholder="Open Format, 15 anos, Balada, Eletronica"
               {...register("genres")}
             />
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs font-medium text-muted-foreground">
+                Sugestões rápidas (clique para adicionar):
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {GENRE_SUGGESTIONS.map((suggestion) => (
+                  <Badge
+                    key={suggestion}
+                    variant="outline"
+                    className="cursor-pointer text-xs transition-colors hover:bg-primary hover:text-primary-foreground"
+                    onClick={() => addGenreSuggestion(suggestion)}
+                  >
+                    + {suggestion}
+                  </Badge>
+                ))}
+              </div>
+            </div>
             <p className="text-xs text-muted-foreground">
               Separe por vírgula os estilos que você toca ou eventos que mais atende.
             </p>
