@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Star, MapPin, Music, Globe } from "lucide-react"
+import { Star, MapPin, Music, Music2, Globe } from "lucide-react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -115,6 +115,7 @@ interface ArtistCardProps {
 
 export function ArtistCard({ artist, userLocation = null }: ArtistCardProps) {
   const hasPhoto = artist.photo_urls && artist.photo_urls.length > 0
+  const artistGenres = artist.genres && artist.genres.length > 0 ? artist.genres : artist.tags || []
 
   const resolvePhotoUrl = useCallback((photoUrl?: string | null) => {
     if (!photoUrl) return null
@@ -163,16 +164,16 @@ export function ArtistCard({ artist, userLocation = null }: ArtistCardProps) {
           </p>
         )}
 
-        {artist.tags && artist.tags.length > 0 && (
+        {artistGenres.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {artist.tags.slice(0, 4).map((tag) => (
+            {artistGenres.slice(0, 4).map((tag) => (
               <Badge key={tag} variant="outline" className="text-xs">
                 {tag}
               </Badge>
             ))}
-            {artist.tags.length > 4 && (
+            {artistGenres.length > 4 && (
               <Badge variant="outline" className="text-xs">
-                +{artist.tags.length - 4}
+                +{artistGenres.length - 4}
               </Badge>
             )}
           </div>
@@ -189,6 +190,15 @@ export function ArtistCard({ artist, userLocation = null }: ArtistCardProps) {
             >
               {artist.website}
             </a>
+          </div>
+        )}
+
+        {artist.soundcloud_links && artist.soundcloud_links.length > 0 && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Music2 className="h-3 w-3" />
+            <span className="text-foreground">
+              {artist.soundcloud_links.length} link{artist.soundcloud_links.length > 1 ? "s" : ""} do SoundCloud
+            </span>
           </div>
         )}
 
