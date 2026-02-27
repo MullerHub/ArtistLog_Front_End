@@ -14,6 +14,7 @@ import {
   Mail,
   Phone,
   MessageCircle,
+  Globe,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -100,6 +101,12 @@ export default function ArtistDetailPage({
   const resolvePhotoUrl = useCallback((photoUrl?: string | null) => {
     if (!photoUrl) return null
     return photoUrl.startsWith("http") ? photoUrl : `${API_BASE_URL}${photoUrl}`
+  }, [])
+
+  const resolveWebsiteUrl = useCallback((url?: string | null) => {
+    if (!url) return null
+    if (/^https?:\/\//i.test(url)) return url
+    return `https://${url}`
   }, [])
 
   const baseFallbackCity = useMemo(() => {
@@ -263,7 +270,7 @@ export default function ArtistDetailPage({
         </Card>
 
         {/* Contact Information */}
-        {(artist.email || artist.phone || artist.whatsapp) && (
+        {(artist.email || artist.phone || artist.whatsapp || artist.website) && (
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Contato</CardTitle>
@@ -309,6 +316,22 @@ export default function ArtistDetailPage({
                       className="text-sm font-medium text-foreground hover:underline"
                     >
                       {artist.whatsapp}
+                    </a>
+                  </div>
+                </div>
+              )}
+              {artist.website && (
+                <div className="flex items-center gap-3">
+                  <Globe className="h-5 w-5 text-primary" />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs text-muted-foreground">Website</span>
+                    <a
+                      href={resolveWebsiteUrl(artist.website) || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-foreground hover:underline"
+                    >
+                      {artist.website}
                     </a>
                   </div>
                 </div>
