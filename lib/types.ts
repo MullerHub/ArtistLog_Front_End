@@ -19,6 +19,9 @@ export interface SignUpArtistRequest {
   email: string
   password: string
   bio?: string
+  tags?: string[]
+  genres?: string[]
+  event_types?: string[]
   cache_base: number
   city: string
   state: string
