@@ -56,6 +56,9 @@ export interface ArtistResponse {
   id: string
   stage_name: string
   bio?: string
+  email?: string
+  phone?: string
+  whatsapp?: string
   photo_urls?: string[]
   profile_photo?: string
   cache_base?: number
@@ -64,6 +67,8 @@ export interface ArtistResponse {
   tags?: string[]
   base_location?: GeoPoint
   current_location?: GeoPoint
+  city?: string
+  state?: string
   created_at: string
   updated_at: string
 }
