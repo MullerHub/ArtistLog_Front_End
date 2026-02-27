@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Star, MapPin, Music } from "lucide-react"
+import { Star, MapPin, Music, Globe } from "lucide-react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -121,6 +121,12 @@ export function ArtistCard({ artist, userLocation = null }: ArtistCardProps) {
     return photoUrl.startsWith("http") ? photoUrl : `${API_BASE_URL}${photoUrl}`
   }, [])
 
+  const resolveWebsiteUrl = useCallback((url?: string | null) => {
+    if (!url) return null
+    if (/^https?:\/\//i.test(url)) return url
+    return `https://${url}`
+  }, [])
+
   return (
     <Card className="flex flex-col transition-shadow hover:shadow-md">
       <CardContent className="flex flex-1 flex-col gap-3 p-5">
@@ -169,6 +175,20 @@ export function ArtistCard({ artist, userLocation = null }: ArtistCardProps) {
                 +{artist.tags.length - 4}
               </Badge>
             )}
+          </div>
+        )}
+
+        {artist.website && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Globe className="h-3 w-3" />
+            <a
+              href={resolveWebsiteUrl(artist.website) || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="truncate text-foreground hover:underline"
+            >
+              {artist.website}
+            </a>
           </div>
         )}
 
