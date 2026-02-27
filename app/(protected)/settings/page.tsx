@@ -78,6 +78,7 @@ const artistProfileSchema = z.object({
       },
       { message: "WhatsApp inválido" }
     ),
+  soundcloud_links: z.string().max(500, "Máximo de 500 caracteres").optional(),
 })
 
 const venueProfileSchema = z.object({
@@ -233,6 +234,7 @@ function ArtistProfileSettings() {
         website: artistData.website || "",
         phone: artistData.phone ? formatPhoneNumber(artistData.phone) : "",
         whatsapp: artistData.whatsapp ? formatPhoneNumber(artistData.whatsapp) : "",
+        soundcloud_links: (artistData.soundcloud_links || []).join(", "),
       })
     }
   }, [artistData, reset])
@@ -253,6 +255,7 @@ function ArtistProfileSettings() {
       const normalizedEmail = data.email?.trim() || ""
       const normalizedWebsite = normalizeWebsite(data.website)
       const normalizedGenres = parseListInput(data.genres)
+      const normalizedSoundcloudLinks = parseListInput(data.soundcloud_links)
 
       const normalizedData: ArtistProfileForm = {
         ...data,
@@ -275,6 +278,9 @@ function ArtistProfileSettings() {
         profileData.genres = normalizedGenres
         profileData.event_types = normalizedGenres
         profileData.tags = normalizedGenres
+      }
+      if (normalizedSoundcloudLinks.length > 0) {
+        profileData.soundcloud_links = normalizedSoundcloudLinks
       }
       if (profilePhoto) {
         profileData.profile_photo = profilePhoto
@@ -443,6 +449,18 @@ function ArtistProfileSettings() {
             <Label htmlFor="website">Website</Label>
             <Input id="website" placeholder="https://..." {...register("website")} />
             {errors.website && <p className="text-sm text-destructive">{errors.website.message}</p>}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="soundcloud_links">Links do SoundCloud</Label>
+            <Input
+              id="soundcloud_links"
+              placeholder="https://soundcloud.com/seu-perfil, https://soundcloud.com/seu-set"
+              {...register("soundcloud_links")}
+            />
+            <p className="text-xs text-muted-foreground">
+              Separe múltiplos links por vírgula para exibir no seu perfil.
+            </p>
+            {errors.soundcloud_links && <p className="text-sm text-destructive">{errors.soundcloud_links.message}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="phone">Telefone</Label>
