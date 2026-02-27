@@ -25,6 +25,7 @@ const artistSchema = z.object({
   confirmPassword: z.string(),
   stage_name: z.string().min(2, "Minimo 2 caracteres").max(150),
   bio: z.string().max(500).optional(),
+  genres: z.string().max(300, "Máximo de 300 caracteres").optional(),
   cache_base: z.coerce.number().positive("Valor deve ser maior que 0"),
   city: z.string().min(1, "Cidade obrigatoria"),
   state: z.string().min(2, "Estado obrigatorio").max(2, "Use a sigla (ex: SP)"),
@@ -208,6 +209,10 @@ function ArtistRegister({
   async function onSubmit(data: ArtistForm) {
     setIsSubmitting(true)
     try {
+      const genresList = data.genres
+        ? data.genres.split(",").map((g) => g.trim()).filter(Boolean)
+        : []
+      
       await authService.signupArtist({
         email: data.email,
         password: data.password,
@@ -216,6 +221,11 @@ function ArtistRegister({
         cache_base: data.cache_base,
         city: data.city,
         state: data.state.toUpperCase(),
+        ...(genresList.length > 0 && {
+          genres: genresList,
+          event_types: genresList,
+          tags: genresList,
+        }),
       })
       toast.success("Conta criada com sucesso! Faca login para continuar.")
       router.push("/login")
@@ -309,6 +319,18 @@ function ArtistRegister({
                   <Label htmlFor="bio">Bio</Label>
                   <Textarea id="bio" placeholder="Fale sobre voce..." {...register("bio")} rows={3} />
                   {errors.bio && <p className="text-sm text-destructive">{errors.bio.message}</p>}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="genres">Generos e tipos de evento (opcional)</Label>
+                  <Input
+                    id="genres"
+                    placeholder="Open Format, 15 anos, Balada, Eletronica"
+                    {...register("genres")}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Separe por vírgula os estilos que você toca.
+                  </p>
+                  {errors.genres && <p className="text-sm text-destructive">{errors.genres.message}</p>}
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="cache_base">Cache Base (R$)</Label>
