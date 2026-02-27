@@ -28,12 +28,25 @@ import { toast } from "sonner"
 
 const phoneDigitsRegex = /^\d{10,11}$/
 
+const normalizeWebsite = (value?: string) => {
+  if (!value) return undefined
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+  if (/^https?:\/\//i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
+
 const artistProfileSchema = z.object({
   stage_name: z.string().min(2).max(150).optional(),
   bio: z.string().max(500).optional(),
   cache_base: z.coerce.number().positive().optional(),
   is_available: z.boolean().optional(),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
+  website: z
+    .string()
+    .trim()
+    .transform((val) => normalizeWebsite(val))
+    .pipe(z.string().url("Website deve ser uma URL válida").optional()),
   phone: z
     .string()
     .optional()
@@ -184,6 +197,7 @@ function ArtistProfileSettings() {
         bio: artistData.bio || "",
         cache_base: artistData.cache_base || undefined,
         email: artistData.email || "",
+        website: artistData.website || "",
         phone: artistData.phone ? formatPhoneNumber(artistData.phone) : "",
         whatsapp: artistData.whatsapp ? formatPhoneNumber(artistData.whatsapp) : "",
       })
@@ -204,10 +218,12 @@ function ArtistProfileSettings() {
       const normalizedPhone = unformatPhoneNumber(data.phone || "")
       const normalizedWhatsapp = unformatPhoneNumber(data.whatsapp || "")
       const normalizedEmail = data.email?.trim() || ""
+      const normalizedWebsite = normalizeWebsite(data.website)
 
       const normalizedData: ArtistProfileForm = {
         ...data,
         email: normalizedEmail,
+        website: normalizedWebsite,
         phone: normalizedPhone || undefined,
         whatsapp: normalizedWhatsapp || undefined,
       }
@@ -330,6 +346,11 @@ function ArtistProfileSettings() {
             <Label htmlFor="email">Email para Contato</Label>
             <Input id="email" type="email" placeholder="seu@email.com" {...register("email")} />
             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="website">Website</Label>
+            <Input id="website" placeholder="https://..." {...register("website")} />
+            {errors.website && <p className="text-sm text-destructive">{errors.website.message}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="phone">Telefone</Label>
