@@ -6,6 +6,22 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
+  webpack: (config, { client }) => {
+    if (client) {
+      config.infrastructureLogging = {
+        debug: [],
+        log: [],
+        info: [],
+        warn: [],
+      }
+    }
+    return config
+  },
 }
 
 export default nextConfig
