@@ -71,6 +71,7 @@ export interface ArtistResponse {
   cache_base?: number
   is_available: boolean
   rating: number
+  profile_views_count?: number
   tags?: string[]
   genres?: string[]
   event_types?: string[]
@@ -122,6 +123,7 @@ export interface VenueResponse {
   infrastructure: string
   rating: number
   reviews_count: number
+  profile_views_count?: number
   base_location?: GeoPoint
   venue_photos?: string[]
   profile_photo?: string
