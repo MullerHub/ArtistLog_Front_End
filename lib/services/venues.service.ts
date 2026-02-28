@@ -9,6 +9,14 @@ import type {
   CreateReviewRequest,
 } from "@/lib/types"
 
+const normalizeVenueResponse = (venue: VenueResponse): VenueResponse => {
+  return {
+    ...venue,
+    // Map user_id from backend to id
+    id: (venue as any).user_id || venue.id,
+  }
+}
+
 export const venuesService = {
   async getAll(filters?: VenueFilters): Promise<VenueListResponse> {
     const response = await apiClient.get<VenueListResponse | VenueResponse[]>(
@@ -18,18 +26,22 @@ export const venuesService = {
 
     if (Array.isArray(response)) {
       return {
-        items: response,
+        items: response.map(normalizeVenueResponse),
         total: response.length,
         limit: filters?.limit ?? response.length,
         offset: filters?.offset ?? 0,
       }
     }
 
-    return response
+    return {
+      ...response,
+      items: response.items.map(normalizeVenueResponse),
+    }
   },
 
   async getById(id: string): Promise<VenueResponse> {
-    return apiClient.get<VenueResponse>(`/venues/${id}`)
+    const venue = await apiClient.get<VenueResponse>(`/venues/${id}`)
+    return normalizeVenueResponse(venue)
   },
 
   async updateProfile(id: string, payload: UpdateVenueProfileRequest): Promise<VenueResponse> {
@@ -135,5 +147,13 @@ export const venuesService = {
 
   async claimCommunityVenue(venueId: string): Promise<{ message: string }> {
     return apiClient.post(`/venues/${venueId}/claim`, {})
+  },
+
+  async registerView(id: string): Promise<void> {
+    try {
+      await apiClient.postPublicSilent(`/venues/${id}/view`, {})
+    } catch (err: unknown) {
+      // Falha silenciosa - não é crítico
+    }
   },
 }
