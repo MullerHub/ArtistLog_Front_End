@@ -46,6 +46,13 @@ export default function ArtistDetailPage({
     { revalidateOnFocus: true, revalidateIfStale: true }
   )
 
+  // Register view when artist profile is loaded (any user viewing the profile)
+  useEffect(() => {
+    if (artist?.id && !isLoading && !error) {
+      artistsService.registerView(artist.id)
+    }
+  }, [artist?.id, isLoading, error])
+
   // Revalidate when page becomes visible (user returns from settings)
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -424,17 +431,8 @@ export default function ArtistDetailPage({
 }
 
 function ArtistSchedulePreview({ artistId }: { artistId: string }) {
-  const { data: schedule, isLoading } = useSWR<ScheduleResponse>(
-    ["artist-schedule-preview", artistId],
-    async () => {
-      try {
-        return await schedulesService.getScheduleById(artistId)
-      } catch {
-        return null as unknown as ScheduleResponse
-      }
-    },
-    { revalidateOnFocus: false }
-  )
+  // Schedule público não está disponível na API - apenas /artists/me/schedule
+  const schedule = null
 
   const slotsByDay = (schedule?.slots || []).reduce(
     (acc, slot) => {
@@ -447,24 +445,6 @@ function ArtistSchedulePreview({ artistId }: { artistId: string }) {
   )
 
   const weekdayOrder = [0, 1, 2, 3, 4, 5, 6]
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Calendar className="h-5 w-5 text-primary" />
-            Agenda
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
 
   if (!schedule || !schedule.slots || schedule.slots.length === 0) {
     return (
