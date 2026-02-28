@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Search, Filter, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,6 +33,7 @@ interface ArtistFiltersProps {
   selectedTags: string[]
   onTagToggle: (tag: string) => void
   onClearFilters: () => void
+  onCollapsedChange?: (collapsed: boolean) => void
 }
 
 export function ArtistFilters({
@@ -46,14 +48,52 @@ export function ArtistFilters({
   selectedTags,
   onTagToggle,
   onClearFilters,
+  onCollapsedChange,
 }: ArtistFiltersProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const hasFilters = search || genreSearch || eventTypeSearch || availableOnly || selectedTags.length > 0
+
+  const handleCollapse = () => {
+    setIsCollapsed(true)
+    onCollapsedChange?.(true)
+  }
+
+  const handleExpand = () => {
+    setIsCollapsed(false)
+    onCollapsedChange?.(false)
+  }
+
+  if (isCollapsed) {
+    return (
+      <div className="flex items-center justify-center rounded-lg border border-border bg-card p-2">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleExpand}
+          aria-label="Expandir filtros"
+          className="flex items-center gap-2 px-2 md:px-0"
+        >
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="md:hidden text-xs font-semibold text-foreground">FILTROS</span>
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={handleCollapse}
+            aria-label="Recolher filtros"
+          >
+            <Filter className="h-4 w-4 text-muted-foreground" />
+          </Button>
           <h3 className="text-sm font-semibold text-foreground">Filtros</h3>
         </div>
         {hasFilters && (
