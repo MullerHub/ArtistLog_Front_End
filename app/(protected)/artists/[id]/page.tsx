@@ -16,6 +16,8 @@ import {
   Phone,
   MessageCircle,
   Globe,
+  User,
+  Image,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -192,7 +194,12 @@ export default function ArtistDetailPage({
     )
   }
 
-  const artistGenres = artist.genres && artist.genres.length > 0 ? artist.genres : artist.tags || []
+  const artistGenres =
+    artist.genres && artist.genres.length > 0
+      ? artist.genres
+      : artist.event_types && artist.event_types.length > 0
+        ? artist.event_types
+        : artist.tags || []
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -227,10 +234,6 @@ export default function ArtistDetailPage({
                   {artist.is_available ? "Disponivel" : "Indisponivel"}
                 </Badge>
               </div>
-
-              {artist.bio && (
-                <p className="leading-relaxed text-muted-foreground">{artist.bio}</p>
-              )}
 
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 <span className="flex items-center gap-1.5 font-semibold text-foreground">
@@ -271,6 +274,48 @@ export default function ArtistDetailPage({
             </div>
           </CardContent>
         </Card>
+
+        {/* About / Bio Section */}
+        {artist.bio && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="h-5 w-5 text-primary" />
+                Sobre o Artista
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                {artist.bio}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Photo Gallery */}
+        {artist.photo_urls && artist.photo_urls.length > 1 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Image className="h-5 w-5 text-primary" />
+                Fotos ({artist.photo_urls.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                {artist.photo_urls.map((photo, index) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={index}
+                    src={resolvePhotoUrl(photo) || ""}
+                    alt={`${artist.stage_name} - Foto ${index + 1}`}
+                    className="aspect-square w-full rounded-lg object-cover transition-transform hover:scale-105"
+                  />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Contact Information */}
         {(artist.email || artist.phone || artist.whatsapp || artist.website || (artist.soundcloud_links && artist.soundcloud_links.length > 0)) && (
@@ -391,6 +436,18 @@ function ArtistSchedulePreview({ artistId }: { artistId: string }) {
     { revalidateOnFocus: false }
   )
 
+  const slotsByDay = (schedule?.slots || []).reduce(
+    (acc, slot) => {
+      const day = slot.day_of_week
+      if (!acc[day]) acc[day] = []
+      acc[day].push(slot)
+      return acc
+    },
+    {} as Record<number, ScheduleResponse["slots"]>
+  )
+
+  const weekdayOrder = [0, 1, 2, 3, 4, 5, 6]
+
   if (isLoading) {
     return (
       <Card>
@@ -434,6 +491,29 @@ function ArtistSchedulePreview({ artistId }: { artistId: string }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
+          <Badge variant="outline">Duração mínima: {schedule.min_gig_duration} min</Badge>
+          {schedule.preferred_event_types?.map((eventType) => (
+            <Badge key={eventType} variant="outline">{eventType}</Badge>
+          ))}
+        </div>
+
+
+
+        <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+          {weekdayOrder.map((day) => {
+            const slots = slotsByDay[day] || []
+            return (
+              <div key={day} className="rounded-lg border border-border bg-card p-2">
+                <p className="text-[11px] font-semibold text-foreground">{formatDayOfWeek(day)}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {slots.length} slot{slots.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+
         <div className="flex flex-col gap-2">
           {schedule.slots.map((slot) => (
             <div
@@ -450,7 +530,9 @@ function ArtistSchedulePreview({ artistId }: { artistId: string }) {
                   {slot.start_time} - {slot.end_time}
                 </span>
                 {slot.crosses_midnight && (
-                  <span className="text-xs font-semibold text-amber-600">proximo dia</span>
+                  <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-100">
+                    🌙 madrugada
+                  </span>
                 )}
               </div>
               <Badge
