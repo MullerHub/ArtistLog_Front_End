@@ -4,9 +4,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 interface FormErrorsAlertProps {
   errors?: string[] | Record<string, { message?: string }>
   isOpen?: boolean
+  onClose?: () => void
 }
 
-export function FormErrorsAlert({ errors, isOpen = true }: FormErrorsAlertProps) {
+export function FormErrorsAlert({ errors, isOpen = true, onClose }: FormErrorsAlertProps) {
   if (!isOpen) return null
 
   const normalizedErrors = Array.isArray(errors)
