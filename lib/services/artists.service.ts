@@ -45,6 +45,8 @@ const normalizeArtistResponse = (artist: ArtistResponse): ArtistResponse => {
 
   const normalized: ArtistResponse = {
     ...artist,
+    // Map user_id from backend to id
+    id: (artist as any).user_id || artist.id,
     // Map about_me from backend to bio for frontend
     bio: (artist as any).about_me || artist.bio,
   }
@@ -97,5 +99,13 @@ export const artistsService = {
 
   async updateLocation(id: string, payload: UpdateLocationRequest): Promise<LocationResponse> {
     return apiClient.post<LocationResponse>(`/artists/${id}/location`, payload)
+  },
+
+  async registerView(id: string): Promise<void> {
+    try {
+      await apiClient.postPublicSilent(`/artists/${id}/view`, {})
+    } catch (err: unknown) {
+      // Falha silenciosa - não é crítico
+    }
   },
 }
