@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import useSWR from "swr"
+import useSWR, { useSWRConfig } from "swr"
 import { Loader2, User, Save, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,8 +33,19 @@ const normalizeWebsite = (value?: string) => {
   if (!value) return undefined
   const trimmed = value.trim()
   if (!trimmed) return undefined
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
-  return `https://${trimmed}`
+  
+  let url = trimmed
+  if (!/^https?:\/\//i.test(url)) {
+    url = `https://${url}`
+  }
+  
+  // Validar se é uma URL válida
+  try {
+    new URL(url)
+    return url
+  } catch {
+    return undefined
+  }
 }
 
 const parseListInput = (value?: string) => {
@@ -46,53 +57,89 @@ const parseListInput = (value?: string) => {
 }
 
 const artistProfileSchema = z.object({
-  stage_name: z.string().min(2).max(150).optional(),
+  stage_name: z.string().min(2, "Nome artistico muito curto").max(150).optional(),
   bio: z.string().max(500).optional(),
-  cache_base: z.coerce.number().positive().optional(),
+  cache_base: z.coerce.number().positive("Cache deve ser positivo").optional(),
   is_available: z.boolean().optional(),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   website: z
     .string()
     .trim()
-    .transform((val) => normalizeWebsite(val))
-    .pipe(z.string().url("Website deve ser uma URL válida").optional()),
+    .optional()
+    .refine(
+      (val) => {
+        if (!val || val === "") return true
+        const normalized = normalizeWebsite(val)
+        if (!normalized) return true
+        try {
+          new URL(normalized)
+          return true
+        } catch {
+          return false
+        }
+      },
+      { message: "Website deve ser uma URL válida (ex: https://exemplo.com)" }
+    ),
   genres: z.string().max(300, "Máximo de 300 caracteres").optional(),
   phone: z
     .string()
     .optional()
     .refine(
       (value) => {
-        if (!value) return true
+        if (!value || value === "") return true
         const digits = unformatPhoneNumber(value)
         return phoneDigitsRegex.test(digits)
       },
-      { message: "Telefone inválido" }
+      { message: "Telefone deve ter 10 ou 11 dígitos" }
     ),
   whatsapp: z
     .string()
     .optional()
     .refine(
       (value) => {
-        if (!value) return true
+        if (!value || value === "") return true
         const digits = unformatPhoneNumber(value)
         return phoneDigitsRegex.test(digits)
       },
-      { message: "WhatsApp inválido" }
+      { message: "WhatsApp deve ter 10 ou 11 dígitos" }
     ),
   soundcloud_links: z.string().max(500, "Máximo de 500 caracteres").optional(),
 })
 
 const venueProfileSchema = z.object({
-  venue_name: z.string().min(2).max(150).optional(),
-  capacity: z.coerce.number().int().positive().optional(),
+  venue_name: z.string().min(2, "Nome muito curto").max(150).optional(),
+  capacity: z.coerce.number().int("Capacidade deve ser um número inteiro").positive("Capacidade deve ser positiva").optional(),
   infrastructure: z.string().optional(),
   description: z.string().max(500).optional(),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .optional()
+    .refine(
+      (value) => {
+        if (!value || value === "") return true
+        const digits = unformatPhoneNumber(value)
+        return phoneDigitsRegex.test(digits)
+      },
+      { message: "Telefone deve ter 10 ou 11 dígitos" }
+    ),
   website: z
     .string()
     .trim()
-    .transform((val) => (val === "" ? undefined : val))
-    .pipe(z.string().url("Website deve ser uma URL válida").optional()),
+    .optional()
+    .refine(
+      (val) => {
+        if (!val || val === "") return true
+        const normalized = normalizeWebsite(val)
+        if (!normalized) return true
+        try {
+          new URL(normalized)
+          return true
+        } catch {
+          return false
+        }
+      },
+      { message: "Website deve ser uma URL válida (ex: https://exemplo.com)" }
+    ),
 })
 
 type ArtistProfileForm = z.infer<typeof artistProfileSchema>
@@ -154,6 +201,7 @@ export default function SettingsPage() {
 function ArtistProfileSettings() {
   const router = useRouter()
   const { user } = useAuth()
+  const { mutate } = useSWRConfig()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [photoUrls, setPhotoUrls] = useState<string[]>([])
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
@@ -251,30 +299,26 @@ function ArtistProfileSettings() {
 
     setIsSubmitting(true)
     try {
-      const normalizedPhone = unformatPhoneNumber(data.phone || "")
-      const normalizedWhatsapp = unformatPhoneNumber(data.whatsapp || "")
-      const normalizedEmail = data.email?.trim() || ""
-      const normalizedWebsite = normalizeWebsite(data.website)
+      const normalizedPhone = data.phone ? unformatPhoneNumber(data.phone) : undefined
+      const normalizedWhatsapp = data.whatsapp ? unformatPhoneNumber(data.whatsapp) : undefined
+      const normalizedEmail = data.email?.trim() || undefined
+      const normalizedWebsite = data.website?.trim() ? normalizeWebsite(data.website) : undefined
       const normalizedGenres = parseListInput(data.genres)
       const normalizedSoundcloudLinks = parseListInput(data.soundcloud_links)
 
-      const normalizedData: ArtistProfileForm = {
-        ...data,
-        email: normalizedEmail,
-        website: normalizedWebsite,
-        phone: normalizedPhone || undefined,
-        whatsapp: normalizedWhatsapp || undefined,
-      }
-
-      // Remover campos vazios/undefined para não enviar ao backend
+      // Remover campos vazios/undefined/null para não enviar ao backend
       const cleanData: Record<string, any> = {}
-      Object.entries(normalizedData).forEach(([key, value]) => {
-        if (value !== undefined && value !== "" && value !== null) {
-          cleanData[key] = value
-        }
-      })
+      
+      if (data.stage_name?.trim()) cleanData.stage_name = data.stage_name.trim()
+      if (data.bio?.trim()) cleanData.bio = data.bio.trim()
+      if (data.cache_base && data.cache_base > 0) cleanData.cache_base = Number(data.cache_base)
+      if (typeof data.is_available === "boolean") cleanData.is_available = data.is_available
+      if (normalizedEmail && normalizedEmail.length > 0) cleanData.email = normalizedEmail
+      if (normalizedWebsite && normalizedWebsite.length > 0) cleanData.website = normalizedWebsite
+      if (normalizedPhone && normalizedPhone.length >= 10) cleanData.phone = normalizedPhone
+      if (normalizedWhatsapp && normalizedWhatsapp.length >= 10) cleanData.whatsapp = normalizedWhatsapp
 
-      const profileData: Record<string, any> = { ...cleanData, photo_urls: photoUrls }
+      const profileData: Record<string, any> = { ...cleanData, photo_urls: photoUrls || [] }
       if (normalizedGenres.length > 0) {
         profileData.genres = normalizedGenres
         profileData.event_types = normalizedGenres
@@ -288,11 +332,17 @@ function ArtistProfileSettings() {
       }
 
       await artistsService.updateProfile(user.id, profileData)
+      
+      // Invalidar cache da lista de artistas e do perfil individual
+      mutate((key) => Array.isArray(key) && key[0] === 'artists')
+      mutate(['artist-profile', user.id])
+      
       toast.success("✅ Perfil atualizado com sucesso!")
       setShowErrors(false)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao atualizar perfil"
-      toast.error(`❌ Erro: ${message}`)
+      console.error("Erro ao atualizar perfil (Artist):", err)
+      toast.error(`Erro: ${message}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -322,6 +372,8 @@ function ArtistProfileSettings() {
           toast.success("Localizacao atualizada com sucesso")
           
           // Revalidate all SWR caches to refresh artist data
+          mutate((key) => Array.isArray(key) && key[0] === 'artists')
+          mutate(['artist-profile', user.id])
           router.refresh()
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : "Erro ao atualizar localizacao"
@@ -371,7 +423,9 @@ function ArtistProfileSettings() {
             </>
           )}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="stage_name">Nome Artistico</Label>
+            <Label htmlFor="stage_name">
+              Nome Artistico <span className="text-destructive">*</span>
+            </Label>
             <Input id="stage_name" placeholder="Seu nome artistico" {...register("stage_name")} />
             {errors.stage_name && <p className="text-sm text-destructive">{errors.stage_name.message}</p>}
           </div>
@@ -644,16 +698,21 @@ function VenueProfileSettings() {
 
     setIsSubmitting(true)
     try {
-      // Remover campos vazios/undefined para não enviar ao backend
+      const normalizedPhone = data.phone ? unformatPhoneNumber(data.phone) : undefined
+      const normalizedWebsite = data.website?.trim() ? normalizeWebsite(data.website) : undefined
+
+      // Remover campos vazios/undefined/null para não enviar ao backend
       const cleanData: Record<string, any> = {}
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== "" && value !== null) {
-          cleanData[key] = value
-        }
-      })
+      
+      if (data.venue_name?.trim()) cleanData.venue_name = data.venue_name.trim()
+      if (data.capacity && data.capacity > 0) cleanData.capacity = Number(data.capacity)
+      if (data.infrastructure?.trim()) cleanData.infrastructure = data.infrastructure.trim()
+      if (data.description?.trim()) cleanData.description = data.description.trim()
+      if (normalizedPhone && normalizedPhone.length >= 10) cleanData.phone = normalizedPhone
+      if (normalizedWebsite && normalizedWebsite.length > 0) cleanData.website = normalizedWebsite
 
       // Preparar dados com localização se disponível
-      const profileData: any = { ...cleanData, venue_photos: venuePhotos }
+      const profileData: any = { ...cleanData, venue_photos: venuePhotos || [] }
       
       if (profilePhoto) {
         profileData.profile_photo = profilePhoto
@@ -661,8 +720,8 @@ function VenueProfileSettings() {
       
       if (latitude !== null && longitude !== null) {
         profileData.base_location = {
-          latitude,
-          longitude,
+          latitude: Number(latitude),
+          longitude: Number(longitude),
         }
       }
 
@@ -671,15 +730,20 @@ function VenueProfileSettings() {
       setShowErrors(false)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao atualizar perfil"
-      toast.error(`❌ Erro: ${message}`)
+      console.error("Erro ao atualizar perfil (Venue):", err)
+      toast.error(`Erro: ${message}`)
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  const formErrors = Object.values(errors)
+    .map((error) => (typeof error?.message === "string" ? error.message : null))
+    .filter((message): message is string => Boolean(message))
+
   return (
     <>
-      <FormErrorsAlert errors={errors} isOpen={showErrors} onClose={() => setShowErrors(false)} />
+      <FormErrorsAlert errors={formErrors} isOpen={showErrors} onClose={() => setShowErrors(false)} />
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Perfil da Venue</CardTitle>
@@ -742,12 +806,18 @@ function VenueProfileSettings() {
           
           <Separator />
           <div className="flex flex-col gap-2">
-            <Label htmlFor="venue_name">Nome da Venue</Label>
+            <Label htmlFor="venue_name">
+              Nome da Venue <span className="text-destructive">*</span>
+            </Label>
             <Input id="venue_name" placeholder="Nome do espaco" {...register("venue_name")} />
+            {errors.venue_name && <p className="text-sm text-destructive">{errors.venue_name.message}</p>}
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="capacity">Capacidade</Label>
+            <Label htmlFor="capacity">
+              Capacidade <span className="text-destructive">*</span>
+            </Label>
             <Input id="capacity" type="number" placeholder="200" {...register("capacity")} />
+            {errors.capacity && <p className="text-sm text-destructive">{errors.capacity.message}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="infrastructure">Infraestrutura</Label>
