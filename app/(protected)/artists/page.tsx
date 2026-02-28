@@ -111,9 +111,14 @@ export default function ArtistsPage() {
     let list = artists
 
     const getArtistGenres = (artist: ArtistListResponse["items"][number]) => {
-      return (artist.genres && artist.genres.length > 0 ? artist.genres : artist.tags || []).map((item) =>
-        item.toLowerCase().trim()
-      )
+      const merged =
+        artist.genres && artist.genres.length > 0
+          ? artist.genres
+          : artist.event_types && artist.event_types.length > 0
+            ? artist.event_types
+            : artist.tags || []
+
+      return merged.map((item) => item.toLowerCase().trim())
     }
 
     if (searchQuery.length > 0) {
