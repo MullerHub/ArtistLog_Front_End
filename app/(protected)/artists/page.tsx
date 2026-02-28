@@ -22,6 +22,7 @@ export default function ArtistsPage() {
   const [offset, setOffset] = useState(0)
   const [radiusKm, setRadiusKm] = useState(25)
   const [userLocation, setUserLocation] = useState<GeoPoint | null>(null)
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false)
   const [isLocating, setIsLocating] = useState(false)
   const [locationError, setLocationError] = useState<string | null>(null)
   const limit = 20
@@ -197,7 +198,7 @@ export default function ArtistsPage() {
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
-        <div className="w-full lg:w-72 lg:flex-shrink-0">
+        <div className={isFiltersCollapsed ? "w-auto lg:flex-shrink-0" : "w-full lg:w-72 lg:flex-shrink-0"}>
           <ArtistFilters
             search={search}
             onSearchChange={setSearch}
@@ -210,6 +211,7 @@ export default function ArtistsPage() {
             selectedTags={selectedTags}
             onTagToggle={toggleTag}
             onClearFilters={clearFilters}
+            onCollapsedChange={setIsFiltersCollapsed}
           />
         </div>
 
