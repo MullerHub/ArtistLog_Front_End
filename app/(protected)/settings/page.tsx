@@ -19,6 +19,7 @@ import { PhotoUpload } from "@/components/photo-upload"
 import { PhotoGallery } from "@/components/photo-gallery"
 import { FormErrorsAlert } from "@/components/form-errors-alert"
 import { ProfilePhotoSelector } from "@/components/profile-photo-selector"
+import { NotificationTest } from "@/components/notification-test"
 import { useAuth } from "@/lib/auth-context"
 import { artistsService } from "@/lib/services/artists.service"
 import { venuesService } from "@/lib/services/venues.service"
@@ -194,6 +195,10 @@ export default function SettingsPage() {
 
       {user?.role === "ARTIST" && <ArtistProfileSettings />}
       {user?.role === "VENUE" && <VenueProfileSettings />}
+
+      <Separator className="my-8" />
+
+      <NotificationTest />
     </div>
   )
 }
