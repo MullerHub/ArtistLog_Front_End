@@ -122,7 +122,12 @@ interface ArtistCardProps {
 
 export function ArtistCard({ artist, userLocation = null }: ArtistCardProps) {
   const hasPhoto = artist.photo_urls && artist.photo_urls.length > 0
-  const artistGenres = artist.genres && artist.genres.length > 0 ? artist.genres : artist.tags || []
+  const artistGenres =
+    artist.genres && artist.genres.length > 0
+      ? artist.genres
+      : artist.event_types && artist.event_types.length > 0
+        ? artist.event_types
+        : artist.tags || []
 
   const resolvePhotoUrl = useCallback((photoUrl?: string | null) => {
     if (!photoUrl) return null
