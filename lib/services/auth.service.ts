@@ -1,4 +1,5 @@
 import { apiClient, setToken, removeToken } from "@/lib/api-client"
+import { mergeArtistTagFields } from "@/lib/services/artist-tags"
 import type {
   AuthResponse,
   LoginRequest,
@@ -18,7 +19,22 @@ export const authService = {
   },
 
   async signupArtist(payload: SignUpArtistRequest): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>("/auth/signup/artist", payload)
+    const mergedTags = mergeArtistTagFields(payload)
+    const normalizedPayload: SignUpArtistRequest = {
+      ...payload,
+      // Map bio to about_me for backend compatibility
+      about_me: payload.bio || payload.about_me,
+      bio: undefined,
+      ...(mergedTags.length > 0
+        ? {
+            tags: mergedTags,
+            genres: mergedTags,
+            event_types: mergedTags,
+          }
+        : {}),
+    }
+
+    return apiClient.post<AuthResponse>("/auth/signup/artist", normalizedPayload)
   },
 
   async signupVenue(payload: SignUpVenueRequest): Promise<AuthResponse> {
