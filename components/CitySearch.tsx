@@ -33,7 +33,7 @@ export function CitySearch({
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
-  const searchTimeoutRef = useRef<NodeJS.Timeout>()
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
