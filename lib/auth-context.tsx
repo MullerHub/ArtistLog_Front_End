@@ -36,7 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!isMounted) return
           setUser(freshUser)
           localStorage.setItem("artistlog_user", JSON.stringify(freshUser))
-        } catch {
+        } catch (err) {
+          console.error("Erro ao buscar usuário fresco:", err)
           if (!isMounted) return
           setUser(null)
         }
