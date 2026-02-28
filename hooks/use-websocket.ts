@@ -16,7 +16,6 @@ export function useWebSocket() {
 
   const connect = useCallback(() => {
     if (!token) {
-      console.log("[WebSocket] No token, skipping connection")
       return
     }
 
@@ -29,13 +28,10 @@ export function useWebSocket() {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
     const wsUrl = `${protocol}//${window.location.hostname}:8080/ws`
 
-    console.log(`[WebSocket] Connecting to ${wsUrl}...`)
-
     try {
       const ws = new WebSocket(wsUrl)
 
       ws.onopen = () => {
-        console.log("[WebSocket] Connected")
         setIsConnected(true)
         reconnectAttemptsRef.current = 0
 
@@ -46,7 +42,6 @@ export function useWebSocket() {
       ws.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data)
-          console.log("[WebSocket] Message received:", message)
           setLastMessage(message)
         } catch (error) {
           console.error("[WebSocket] Error parsing message:", error)
@@ -58,7 +53,6 @@ export function useWebSocket() {
       }
 
       ws.onclose = () => {
-        console.log("[WebSocket] Disconnected")
         setIsConnected(false)
 
         // Reconnect with exponential backoff
@@ -71,17 +65,12 @@ export function useWebSocket() {
             baseDelay * Math.pow(2, reconnectAttemptsRef.current),
             maxDelay
           )
-          
-          console.log(
-            `[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxAttempts})`
-          )
 
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttemptsRef.current++
             connect()
           }, delay)
-        } else {
-          console.log("[WebSocket] Max reconnect attempts reached")
+
         }
       }
 
@@ -92,8 +81,6 @@ export function useWebSocket() {
   }, [token])
 
   const disconnect = useCallback(() => {
-    console.log("[WebSocket] Disconnecting...")
-    
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current)
       reconnectTimeoutRef.current = null
@@ -110,8 +97,6 @@ export function useWebSocket() {
   const sendMessage = useCallback((type: string, payload: Record<string, unknown>) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type, payload }))
-    } else {
-      console.warn("[WebSocket] Cannot send message, not connected")
     }
   }, [])
 
