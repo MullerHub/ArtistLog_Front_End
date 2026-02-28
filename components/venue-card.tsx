@@ -53,11 +53,13 @@ export function VenueCard({ venue, userLocation = null, distanceKm }: VenueCardP
   }, [baseLocation, distanceKm, userLocation])
 
   const baseLabel = useMemo(() => {
+    // Priorizar a cidade direta do venue
+    if (venue.city) return venue.city
     if (!baseLocation) return "Localização não informada"
     if (baseCity) return baseCity
     if (isLoading) return "Localizando..."
     return `${baseLocation.latitude.toFixed(2)}, ${baseLocation.longitude.toFixed(2)}`
-  }, [baseCity, baseLocation, isLoading])
+  }, [baseCity, baseLocation, isLoading, venue.city])
 
   return (
     <Card className="flex flex-col transition-shadow hover:shadow-md">
