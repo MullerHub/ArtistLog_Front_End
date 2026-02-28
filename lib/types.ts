@@ -19,6 +19,7 @@ export interface SignUpArtistRequest {
   email: string
   password: string
   bio?: string
+  about_me?: string
   tags?: string[]
   genres?: string[]
   event_types?: string[]
@@ -59,6 +60,7 @@ export interface ArtistResponse {
   id: string
   stage_name: string
   bio?: string
+  about_me?: string
   email?: string
   phone?: string
   whatsapp?: string
@@ -71,6 +73,7 @@ export interface ArtistResponse {
   rating: number
   tags?: string[]
   genres?: string[]
+  event_types?: string[]
   base_location?: GeoPoint
   current_location?: GeoPoint
   city?: string
@@ -89,6 +92,7 @@ export interface ArtistListResponse {
 export interface UpdateArtistProfileRequest {
   stage_name?: string
   bio?: string
+  about_me?: string
   cache_base?: number
   is_available?: boolean
   tags?: string[]
@@ -361,9 +365,9 @@ export interface PaginationParams {
 
 export interface ArtistFilters extends PaginationParams {
   available?: boolean
-  tags?: string
-  genres?: string
-  event_types?: string
+  tags?: string | string[]
+  genres?: string | string[]
+  event_types?: string | string[]
   q?: string
 }
 
