@@ -1,6 +1,6 @@
 "use client"
 
-import { use } from "react"
+import { use, useEffect } from "react"
 import useSWR from "swr"
 import Link from "next/link"
 import {
@@ -38,6 +38,13 @@ export default function VenueDetailPage({
     ["venue", id],
     () => venuesService.getById(id)
   )
+
+  // Register view when venue profile is loaded
+  useEffect(() => {
+    if (venue?.id) {
+      venuesService.registerView(venue.id)
+    }
+  }, [venue?.id])
 
   const { data: reviews } = useSWR<ReviewResponse[]>(
     venue && !venue.is_community ? ["venue-reviews", id] : null,
