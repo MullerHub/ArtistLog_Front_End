@@ -433,8 +433,16 @@ function ArtistProfileSettings() {
             {errors.genres && <p className="text-sm text-destructive">{errors.genres.message}</p>}
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="cache_base">Cache Base (R$)</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="cache_base">Cache Base (R$)</Label>
+              <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-semibold">
+                i
+              </Badge>
+            </div>
             <Input id="cache_base" type="number" placeholder="500" {...register("cache_base")} />
+            <p className="text-xs text-muted-foreground">
+              O cache base é o cache líquido, sem contar transporte e nenhum custo variável.
+            </p>
           </div>
           <Separator />
           <div className="mt-2 mb-2">
