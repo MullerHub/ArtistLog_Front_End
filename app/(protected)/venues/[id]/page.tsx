@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useEffect } from "react"
+import { use, useEffect, useState } from "react"
 import useSWR from "swr"
 import Link from "next/link"
 import {
@@ -14,6 +14,7 @@ import {
   Phone,
   Globe,
   AlertCircle,
+  MapPin,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -23,8 +24,10 @@ import { ContractProposalForm } from "@/components/contract-proposal-form"
 import { CommunityVenueBadge } from "@/components/community-venue-badge"
 import { useAuth } from "@/lib/auth-context"
 import { venuesService } from "@/lib/services/venues.service"
+import { buildGoogleMapsUrl } from "@/lib/geo"
 import { formatRating, formatDate, formatRelative } from "@/lib/formatters"
 import type { VenueResponse, ReviewResponse } from "@/lib/types"
+import { toast } from "sonner"
 
 export default function VenueDetailPage({
   params,
@@ -34,7 +37,7 @@ export default function VenueDetailPage({
   const { id } = use(params)
   const { user } = useAuth()
 
-  const { data: venue, isLoading, error } = useSWR<VenueResponse>(
+  const { data: venue, isLoading, error, mutate: mutateVenue } = useSWR<VenueResponse>(
     ["venue", id],
     () => venuesService.getById(id)
   )
@@ -52,6 +55,102 @@ export default function VenueDetailPage({
   )
 
   const isArtist = user?.role === "ARTIST"
+  const canUpdateExactLocation = Boolean(
+    user &&
+      venue &&
+      ((user.role === "VENUE" && user.id === venue.id) ||
+        (venue.is_community && venue.created_by_user_id && user.id === venue.created_by_user_id))
+  )
+
+  const exactLocationUrl = venue?.exact_location
+    ? buildGoogleMapsUrl(venue.exact_location)
+    : null
+
+  const [manualExactLatitude, setManualExactLatitude] = useState<number | null>(null)
+  const [manualExactLongitude, setManualExactLongitude] = useState<number | null>(null)
+  const [isUpdatingExactLocation, setIsUpdatingExactLocation] = useState(false)
+
+  useEffect(() => {
+    if (!venue) return
+    if (venue.exact_location) {
+      setManualExactLatitude(venue.exact_location.latitude)
+      setManualExactLongitude(venue.exact_location.longitude)
+      return
+    }
+    if (venue.base_location) {
+      setManualExactLatitude(venue.base_location.latitude)
+      setManualExactLongitude(venue.base_location.longitude)
+    }
+  }, [venue])
+
+  const updateExactLocation = async (latitude: number, longitude: number) => {
+    if (!venue) return
+
+    if (latitude < -90 || latitude > 90) {
+      toast.error("Latitude deve estar entre -90 e 90")
+      return
+    }
+
+    if (longitude < -180 || longitude > 180) {
+      toast.error("Longitude deve estar entre -180 e 180")
+      return
+    }
+
+    setIsUpdatingExactLocation(true)
+    try {
+      await venuesService.updateExactLocation(venue.id, {
+        exact_latitude: latitude,
+        exact_longitude: longitude,
+      })
+      await mutateVenue()
+      toast.success("Localização exata atualizada com sucesso")
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erro ao atualizar localização exata"
+      toast.error(message)
+    } finally {
+      setIsUpdatingExactLocation(false)
+    }
+  }
+
+  const handleUseVenueBaseLocation = async () => {
+    if (!venue?.base_location) {
+      toast.error("Esta venue não possui localização base cadastrada")
+      return
+    }
+
+    setManualExactLatitude(venue.base_location.latitude)
+    setManualExactLongitude(venue.base_location.longitude)
+    await updateExactLocation(venue.base_location.latitude, venue.base_location.longitude)
+  }
+
+  const handleUpdateExactLocation = () => {
+    if (!venue) return
+    if (!navigator.geolocation) {
+      toast.error("Geolocalização não suportada neste navegador")
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        setManualExactLatitude(pos.coords.latitude)
+        setManualExactLongitude(pos.coords.longitude)
+        await updateExactLocation(pos.coords.latitude, pos.coords.longitude)
+      },
+      () => {
+        toast.error("Não foi possível obter sua localização")
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
+  const handleSaveManualExactLocation = async () => {
+    if (manualExactLatitude === null || manualExactLongitude === null) {
+      toast.error("Informe latitude e longitude")
+      return
+    }
+
+    await updateExactLocation(manualExactLatitude, manualExactLongitude)
+  }
 
   if (isLoading) {
     return (
@@ -144,6 +243,89 @@ export default function VenueDetailPage({
             </CardContent>
           </Card>
         )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <MapPin className="h-5 w-5 text-primary" />
+              Localização Exata
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {venue.exact_location ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {venue.exact_location.latitude.toFixed(6)}, {venue.exact_location.longitude.toFixed(6)}
+                </p>
+                {exactLocationUrl && (
+                  <a
+                    href={exactLocationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    Abrir no Google Maps
+                  </a>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Localização exata ainda não definida.</p>
+            )}
+
+            {canUpdateExactLocation && (
+              <div className="space-y-3 rounded-md border border-border p-3">
+                <p className="text-xs text-muted-foreground">
+                  Você pode definir a localização exata pela localização da própria venue, por coordenadas manuais ou pela geolocalização atual do dispositivo.
+                </p>
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <input
+                    type="number"
+                    step="any"
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    placeholder="Latitude exata"
+                    value={manualExactLatitude ?? ""}
+                    onChange={(e) => setManualExactLatitude(e.target.value === "" ? null : Number(e.target.value))}
+                  />
+                  <input
+                    type="number"
+                    step="any"
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                    placeholder="Longitude exata"
+                    value={manualExactLongitude ?? ""}
+                    onChange={(e) => setManualExactLongitude(e.target.value === "" ? null : Number(e.target.value))}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleUseVenueBaseLocation}
+                    disabled={isUpdatingExactLocation}
+                  >
+                    Usar localização cadastrada da venue
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleUpdateExactLocation}
+                    disabled={isUpdatingExactLocation}
+                  >
+                    Usar minha localização atual
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleSaveManualExactLocation}
+                    disabled={isUpdatingExactLocation}
+                  >
+                    {isUpdatingExactLocation ? "Salvando..." : "Salvar coordenadas manuais"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Contract Proposal Form - Only for Artists and NON-Community Venues */}
         {isArtist && user && !venue.is_community && (
