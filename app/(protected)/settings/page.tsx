@@ -20,6 +20,7 @@ import { PhotoGallery } from "@/components/photo-gallery"
 import { FormErrorsAlert } from "@/components/form-errors-alert"
 import { ProfilePhotoSelector } from "@/components/profile-photo-selector"
 import { NotificationTest } from "@/components/notification-test"
+import { ExactLocationManager } from "@/components/exact-location-manager"
 import { useAuth } from "@/lib/auth-context"
 import { artistsService } from "@/lib/services/artists.service"
 import { venuesService } from "@/lib/services/venues.service"
@@ -724,6 +725,17 @@ function VenueProfileSettings() {
     )
   }
 
+  const handleUseBaseLocationForExact = () => {
+    if (latitude === null || longitude === null) {
+      toast.error("Defina primeiro a localização base da venue")
+      return
+    }
+
+    setExactLatitude(latitude)
+    setExactLongitude(longitude)
+    toast.success("Localização base aplicada como localização exata")
+  }
+
   const handleSaveExactLocation = async () => {
     if (!user) return
     const venueId = venueData?.id ?? user.id
@@ -876,69 +888,23 @@ function VenueProfileSettings() {
             )}
           </div>
 
-          <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
-            <Label className="text-sm font-semibold">Localização Exata (ExactLocation)</Label>
+          <ExactLocationManager
+            latitude={exactLatitude}
+            longitude={exactLongitude}
+            baseLatitude={latitude}
+            baseLongitude={longitude}
+            isUpdating={isUpdatingExactLocation}
+            onLatitudeChange={setExactLatitude}
+            onLongitudeChange={setExactLongitude}
+            onUseCurrentLocation={handleUseExactLocation}
+            onUseBaseLocation={handleUseBaseLocationForExact}
+            onSave={handleSaveExactLocation}
+          />
+          {exactLocationUpdatedAt && (
             <p className="text-xs text-muted-foreground">
-              Defina o pin exato do local para abrir diretamente no Google Maps.
+              Atualizada em {formatDate(exactLocationUpdatedAt)}
             </p>
-
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <Input
-                type="number"
-                step="any"
-                placeholder="Latitude exata"
-                value={exactLatitude ?? ""}
-                onChange={(e) =>
-                  setExactLatitude(e.target.value === "" ? null : Number(e.target.value))
-                }
-              />
-              <Input
-                type="number"
-                step="any"
-                placeholder="Longitude exata"
-                value={exactLongitude ?? ""}
-                onChange={(e) =>
-                  setExactLongitude(e.target.value === "" ? null : Number(e.target.value))
-                }
-              />
-            </div>
-
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleUseExactLocation}
-                disabled={isUpdatingExactLocation}
-              >
-                {isUpdatingExactLocation ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Capturando...
-                  </>
-                ) : (
-                  "Usar minha localização exata"
-                )}
-              </Button>
-              <Button
-                type="button"
-                onClick={handleSaveExactLocation}
-                disabled={isUpdatingExactLocation}
-              >
-                Salvar localização exata
-              </Button>
-            </div>
-
-            {exactLatitude !== null && exactLongitude !== null && (
-              <p className="text-xs text-muted-foreground">
-                ExactLocation: {exactLatitude.toFixed(6)}, {exactLongitude.toFixed(6)}
-              </p>
-            )}
-            {exactLocationUpdatedAt && (
-              <p className="text-xs text-muted-foreground">
-                Atualizada em {formatDate(exactLocationUpdatedAt)}
-              </p>
-            )}
-          </div>
+          )}
           
           <Separator />
           <div className="flex flex-col gap-2">
