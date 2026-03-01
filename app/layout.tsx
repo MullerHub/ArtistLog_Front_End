@@ -6,6 +6,7 @@ import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/components/theme-provider"
 
 import "./globals.css"
+import "leaflet/dist/leaflet.css"
 
 const _inter = Inter({ subsets: ["latin"] })
 const _spaceMono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"] })
