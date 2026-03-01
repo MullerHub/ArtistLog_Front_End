@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import L from "leaflet"
-import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet"
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet"
 
 interface ExactLocationMapViewProps {
   latitude: number | null
@@ -12,12 +12,20 @@ interface ExactLocationMapViewProps {
   onPickLocation: (latitude: number, longitude: number) => void
 }
 
-const markerIcon = L.icon({
+const exactMarkerIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
+})
+
+const baseMarkerIcon = L.icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-grey.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
 })
 
 function ClickHandler({ onPickLocation }: { onPickLocation: (latitude: number, longitude: number) => void }) {
@@ -26,6 +34,24 @@ function ClickHandler({ onPickLocation }: { onPickLocation: (latitude: number, l
       onPickLocation(event.latlng.lat, event.latlng.lng)
     },
   })
+
+  return null
+}
+
+function MapController({
+  latitude,
+  longitude,
+}: {
+  latitude: number | null
+  longitude: number | null
+}) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (latitude !== null && longitude !== null) {
+      map.setView([latitude, longitude], 15, { animate: true })
+    }
+  }, [latitude, longitude, map])
 
   return null
 }
@@ -52,6 +78,9 @@ export default function ExactLocationMapView({
   const selectedPosition =
     latitude !== null && longitude !== null ? ([latitude, longitude] as [number, number]) : null
 
+  const basePosition =
+    baseLatitude !== null && baseLongitude !== null ? ([baseLatitude, baseLongitude] as [number, number]) : null
+
   return (
     <div className="overflow-hidden rounded-md border border-border">
       <MapContainer center={center} zoom={selectedPosition ? 16 : 5} className="h-72 w-full">
@@ -60,7 +89,19 @@ export default function ExactLocationMapView({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <ClickHandler onPickLocation={onPickLocation} />
-        {selectedPosition && <Marker position={selectedPosition} icon={markerIcon} draggable={false} />}
+        <MapController latitude={latitude} longitude={longitude} />
+        
+        {basePosition && (
+          <Marker position={basePosition} icon={baseMarkerIcon}>
+            <Popup>📍 Localização Base da Venue</Popup>
+          </Marker>
+        )}
+        
+        {selectedPosition && (
+          <Marker position={selectedPosition} icon={exactMarkerIcon}>
+            <Popup>🎯 Localização Exata Selecionada</Popup>
+          </Marker>
+        )}
       </MapContainer>
     </div>
   )
