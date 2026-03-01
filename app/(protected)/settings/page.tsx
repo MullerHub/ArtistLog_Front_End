@@ -613,7 +613,11 @@ function VenueProfileSettings() {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
   const [latitude, setLatitude] = useState<number | null>(null)
   const [longitude, setLongitude] = useState<number | null>(null)
+  const [exactLatitude, setExactLatitude] = useState<number | null>(null)
+  const [exactLongitude, setExactLongitude] = useState<number | null>(null)
   const [isLocating, setIsLocating] = useState(false)
+  const [isUpdatingExactLocation, setIsUpdatingExactLocation] = useState(false)
+  const [exactLocationUpdatedAt, setExactLocationUpdatedAt] = useState<string | null>(null)
   const [locationError, setLocationError] = useState<string | null>(null)
   const [showErrors, setShowErrors] = useState(false)
 
@@ -639,6 +643,10 @@ function VenueProfileSettings() {
     if (venueData?.base_location) {
       setLatitude(venueData.base_location.latitude)
       setLongitude(venueData.base_location.longitude)
+    }
+    if (venueData?.exact_location) {
+      setExactLatitude(venueData.exact_location.latitude)
+      setExactLongitude(venueData.exact_location.longitude)
     }
   }, [venueData])
 
@@ -690,6 +698,65 @@ function VenueProfileSettings() {
       },
       { enableHighAccuracy: true, timeout: 10000 }
     )
+  }
+
+  const handleUseExactLocation = () => {
+    setLocationError(null)
+    if (!navigator.geolocation) {
+      setLocationError("Geolocalização não suportada neste navegador")
+      return
+    }
+
+    setIsUpdatingExactLocation(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setExactLatitude(pos.coords.latitude)
+        setExactLongitude(pos.coords.longitude)
+        setIsUpdatingExactLocation(false)
+        toast.success("Coordenadas exatas capturadas com sucesso")
+      },
+      () => {
+        setLocationError("Não foi possível obter sua localização")
+        setIsUpdatingExactLocation(false)
+        toast.error("Não conseguimos acessar sua localização. Verifique as permissões do navegador.")
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
+  const handleSaveExactLocation = async () => {
+    if (!user) return
+    const venueId = venueData?.id ?? user.id
+
+    if (exactLatitude !== null && (exactLatitude < -90 || exactLatitude > 90)) {
+      toast.error("Latitude deve estar entre -90 e 90")
+      return
+    }
+
+    if (exactLongitude !== null && (exactLongitude < -180 || exactLongitude > 180)) {
+      toast.error("Longitude deve estar entre -180 e 180")
+      return
+    }
+
+    if (exactLatitude === null && exactLongitude === null) {
+      toast.error("Informe latitude ou longitude para atualizar")
+      return
+    }
+
+    setIsUpdatingExactLocation(true)
+    try {
+      const response = await venuesService.updateExactLocation(venueId, {
+        exact_latitude: exactLatitude ?? undefined,
+        exact_longitude: exactLongitude ?? undefined,
+      })
+      setExactLocationUpdatedAt(response.updated_at)
+      toast.success("Localização exata atualizada com sucesso")
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao atualizar localização exata"
+      toast.error(message)
+    } finally {
+      setIsUpdatingExactLocation(false)
+    }
   }
 
   async function onSubmit(data: VenueProfileForm) {
@@ -805,6 +872,70 @@ function VenueProfileSettings() {
             {latitude !== null && longitude !== null && (
               <p className="text-xs text-muted-foreground">
                 Localização: {latitude.toFixed(4)}, {longitude.toFixed(4)}
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
+            <Label className="text-sm font-semibold">Localização Exata (ExactLocation)</Label>
+            <p className="text-xs text-muted-foreground">
+              Defina o pin exato do local para abrir diretamente no Google Maps.
+            </p>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <Input
+                type="number"
+                step="any"
+                placeholder="Latitude exata"
+                value={exactLatitude ?? ""}
+                onChange={(e) =>
+                  setExactLatitude(e.target.value === "" ? null : Number(e.target.value))
+                }
+              />
+              <Input
+                type="number"
+                step="any"
+                placeholder="Longitude exata"
+                value={exactLongitude ?? ""}
+                onChange={(e) =>
+                  setExactLongitude(e.target.value === "" ? null : Number(e.target.value))
+                }
+              />
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleUseExactLocation}
+                disabled={isUpdatingExactLocation}
+              >
+                {isUpdatingExactLocation ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Capturando...
+                  </>
+                ) : (
+                  "Usar minha localização exata"
+                )}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSaveExactLocation}
+                disabled={isUpdatingExactLocation}
+              >
+                Salvar localização exata
+              </Button>
+            </div>
+
+            {exactLatitude !== null && exactLongitude !== null && (
+              <p className="text-xs text-muted-foreground">
+                ExactLocation: {exactLatitude.toFixed(6)}, {exactLongitude.toFixed(6)}
+              </p>
+            )}
+            {exactLocationUpdatedAt && (
+              <p className="text-xs text-muted-foreground">
+                Atualizada em {formatDate(exactLocationUpdatedAt)}
               </p>
             )}
           </div>
