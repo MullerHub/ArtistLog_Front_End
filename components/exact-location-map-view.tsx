@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import L from "leaflet"
-import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet"
+import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap, useMapEvents } from "react-leaflet"
+import { calculateDistance, formatDistance } from "@/lib/geo"
 
 interface ExactLocationMapViewProps {
   latitude: number | null
@@ -63,6 +64,9 @@ export default function ExactLocationMapView({
   baseLongitude,
   onPickLocation,
 }: ExactLocationMapViewProps) {
+  const [dragDistance, setDragDistance] = useState<number | null>(null)
+  const markerRef = useRef<L.Marker>(null)
+
   const center = useMemo<[number, number]>(() => {
     if (latitude !== null && longitude !== null) {
       return [latitude, longitude]
@@ -81,6 +85,37 @@ export default function ExactLocationMapView({
   const basePosition =
     baseLatitude !== null && baseLongitude !== null ? ([baseLatitude, baseLongitude] as [number, number]) : null
 
+  const handleDragStart = () => {
+    if (baseLatitude !== null && baseLongitude !== null && latitude !== null && longitude !== null) {
+      const distance = calculateDistance(
+        { latitude: baseLatitude, longitude: baseLongitude },
+        { latitude, longitude }
+      )
+      setDragDistance(distance)
+    }
+  }
+
+  const handleDrag = () => {
+    const marker = markerRef.current
+    if (marker && baseLatitude !== null && baseLongitude !== null) {
+      const position = marker.getLatLng()
+      const distance = calculateDistance(
+        { latitude: baseLatitude, longitude: baseLongitude },
+        { latitude: position.lat, longitude: position.lng }
+      )
+      setDragDistance(distance)
+    }
+  }
+
+  const handleDragEnd = () => {
+    const marker = markerRef.current
+    if (marker) {
+      const position = marker.getLatLng()
+      onPickLocation(position.lat, position.lng)
+      setDragDistance(null)
+    }
+  }
+
   return (
     <div className="overflow-hidden rounded-md border border-border">
       <MapContainer center={center} zoom={selectedPosition ? 16 : 5} className="h-72 w-full">
@@ -98,8 +133,23 @@ export default function ExactLocationMapView({
         )}
         
         {selectedPosition && (
-          <Marker position={selectedPosition} icon={exactMarkerIcon}>
+          <Marker
+            position={selectedPosition}
+            icon={exactMarkerIcon}
+            draggable={true}
+            ref={markerRef}
+            eventHandlers={{
+              dragstart: handleDragStart,
+              drag: handleDrag,
+              dragend: handleDragEnd,
+            }}
+          >
             <Popup>🎯 Localização Exata Selecionada</Popup>
+            {dragDistance !== null && (
+              <Tooltip permanent direction="top" offset={[0, -40]}>
+                📏 {formatDistance(dragDistance)} da base
+              </Tooltip>
+            )}
           </Marker>
         )}
       </MapContainer>
