@@ -41,3 +41,7 @@ export function formatDistance(distanceInKm: number): string {
   }
   return `${distanceInKm.toFixed(1)} km`;
 }
+
+export function buildGoogleMapsUrl(location: Coordinates): string {
+  return `https://www.google.com/maps?q=${location.latitude},${location.longitude}`;
+}
