@@ -69,4 +69,11 @@ export const notificationsService = {
   ): Promise<{ message: string }> {
     return apiClient.patch("/notifications/preferences", preferences)
   },
+
+  /**
+   * Send test notification
+   */
+  async sendTestNotification(type: string): Promise<{ message: string }> {
+    return apiClient.post("/notifications/test", { type })
+  },
 }
