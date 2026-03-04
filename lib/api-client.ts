@@ -16,6 +16,27 @@ class ApiError extends Error {
   }
 }
 
+async function parseResponseBody(response: Response, endpoint: string): Promise<unknown> {
+  const contentType = response.headers.get("content-type") || ""
+
+  if (contentType.includes("application/json")) {
+    try {
+      return await response.json()
+    } catch (parseErr) {
+      console.error(`[API] JSON Parse error ${endpoint}:`, parseErr)
+      return null
+    }
+  }
+
+  try {
+    const text = await response.text()
+    return text || null
+  } catch (readErr) {
+    console.error(`[API] Response read error ${endpoint}:`, readErr)
+    return null
+  }
+}
+
 function getToken(): string | null {
   if (typeof window === "undefined") return null
   return localStorage.getItem("artistlog_token")
@@ -66,17 +87,15 @@ async function request<T>(
       return undefined as T
     }
 
-    let data: unknown
-    try {
-      data = await response.json()
-    } catch (parseErr) {
-      console.error(`[API] JSON Parse error ${endpoint}:`, parseErr)
-      data = null
-    }
+    const data = await parseResponseBody(response, endpoint)
 
     if (!response.ok) {
+      const fallbackMessage = typeof data === "string" && data.trim().length > 0
+        ? data
+        : `HTTP ${response.status}`
+
       throw new ApiError(
-        (data as any)?.message || (data as any)?.description || `HTTP ${response.status}`,
+        (data as any)?.message || (data as any)?.description || fallbackMessage,
         response.status,
         data
       )
@@ -110,9 +129,9 @@ async function requestFormData<T>(
     })
 
     if (!response.ok) {
-      const data = await response.json()
+      const data = await parseResponseBody(response, endpoint)
       throw new ApiError(
-        data.message || "Upload failed",
+        (data as any)?.message || (typeof data === "string" && data) || "Upload failed",
         response.status,
         data
       )
@@ -147,17 +166,15 @@ async function requestPublic<T>(
       return undefined as T
     }
 
-    let data: unknown
-    try {
-      data = await response.json()
-    } catch (parseErr) {
-      console.error(`[API] JSON Parse error ${endpoint}:`, parseErr)
-      data = null
-    }
+    const data = await parseResponseBody(response, endpoint)
 
     if (!response.ok) {
+      const fallbackMessage = typeof data === "string" && data.trim().length > 0
+        ? data
+        : `HTTP ${response.status}`
+
       throw new ApiError(
-        (data as any)?.message || (data as any)?.description || `HTTP ${response.status}`,
+        (data as any)?.message || (data as any)?.description || fallbackMessage,
         response.status,
         data
       )
@@ -203,11 +220,11 @@ async function requestSilent<T>(
       return undefined as T
     }
 
-    const data = await response.json()
+    const data = await parseResponseBody(response, endpoint)
 
     if (!response.ok) {
       throw new ApiError(
-        data.message || data.description || "Request failed",
+        (data as any)?.message || (data as any)?.description || "Request failed",
         response.status,
         data
       )
