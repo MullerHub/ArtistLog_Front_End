@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Send } from "lucide-react"
-import { apiClient } from "@/lib/api-client"
+import { ApiError } from "@/lib/api-client"
+import { notificationsService } from "@/lib/services/notifications.service"
 import { toast } from "sonner"
 
 const NOTIFICATION_TYPES = [
@@ -25,15 +26,26 @@ export function NotificationTest() {
   const handleSendNotification = async () => {
     setIsLoading(true)
     try {
-      await apiClient.post("/notifications/test", {
-        type: selectedType,
-      })
+      await notificationsService.sendTestNotification(selectedType)
       
       const notifType = NOTIFICATION_TYPES.find(n => n.value === selectedType)
       toast.success(`Notificação de teste enviada: ${notifType?.label}`)
     } catch (error) {
-      console.error("Error sending test notification:", error)
-      toast.error("Erro ao enviar notificação de teste")
+      console.error("❌ Error sending test notification:", error)
+      if (error instanceof ApiError) {
+        const backendMessage =
+          (error.data as { message?: string; description?: string } | null)?.message ||
+          (error.data as { message?: string; description?: string } | null)?.description ||
+          (typeof error.data === "string" ? error.data : null)
+
+        toast.error(
+          backendMessage
+            ? `Erro ao enviar notificação de teste: ${backendMessage}`
+            : `Erro ao enviar notificação de teste (HTTP ${error.status})`
+        )
+      } else {
+        toast.error("Erro ao enviar notificação de teste")
+      }
     } finally {
       setIsLoading(false)
     }
