@@ -23,6 +23,12 @@ export interface SignUpArtistRequest {
   tags?: string[]
   genres?: string[]
   event_types?: string[]
+  phone?: string
+  whatsapp?: string
+  website?: string
+  soundcloud_links?: string[]
+  photo_urls?: string[]
+  profile_photo?: string
   cache_base: number
   city: string
   state: string
@@ -125,6 +131,9 @@ export interface VenueResponse {
   reviews_count: number
   profile_views_count?: number
   base_location?: GeoPoint
+  exact_location?: GeoPoint
+  city?: string
+  state?: string
   venue_photos?: string[]
   profile_photo?: string
   description?: string
@@ -157,7 +166,9 @@ export interface NearbyVenueResponse {
   venue_photos?: string[]
   profile_photo?: string | null
   capacity: number
-  location: GeoPoint | null
+  base_location?: GeoPoint | null
+  location?: GeoPoint | null // Deprecated: use base_location
+  exact_location?: GeoPoint | null
   hours?: string | null
   phone?: string | null
   website?: string | null
@@ -183,6 +194,19 @@ export interface UpdateVenueProfileRequest {
   venue_photos?: string[]
   profile_photo?: string
   base_location?: GeoPoint
+}
+
+export interface UpdateVenueExactLocationRequest {
+  exact_latitude?: number
+  exact_longitude?: number
+}
+
+export interface UpdateVenueExactLocationResponse {
+  status: string
+  message: string
+  exact_latitude?: number
+  exact_longitude?: number
+  updated_at: string | null | { Time: string; Valid: boolean }
 }
 
 // ============================================================================
@@ -303,6 +327,10 @@ export interface Contract {
   venue_id: string
   event_date: string // YYYY-MM-DD
   final_price: number
+  description?: string
+  message?: string
+  counter_proposal_price?: number
+  counter_proposal_message?: string
   status: ContractStatus
   created_at: string
   updated_at: string
@@ -313,10 +341,15 @@ export interface CreateContractRequest {
   venue_id: string
   event_date: string
   final_price: number
+  description?: string
+  message?: string
 }
 
 export interface UpdateContractStatusRequest {
   status: ContractStatus
+  message?: string
+  counter_proposal_price?: number
+  counter_proposal_message?: string
 }
 
 export interface ContractListResponse {
@@ -324,6 +357,140 @@ export interface ContractListResponse {
   total: number
   limit: number
   offset: number
+}
+
+// ============================================================================
+// PROPOSALS TYPES
+// ============================================================================
+
+export type ProposalStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "SUPERSEDED"
+
+export interface Proposal {
+  id: string
+  contract_id: string
+  proposed_by_user_id: string
+  proposed_by_role: "ARTIST" | "VENUE"
+  proposed_price?: number
+  proposed_date?: string
+  proposed_time?: string
+  proposed_duration?: number
+  message: string
+  status: ProposalStatus
+  rejection_message?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ProposalListResponse {
+  data: Proposal[]
+  total: number
+  limit: number
+  offset: number
+}
+
+// ============================================================================
+// MESSAGES TYPES
+// ============================================================================
+
+export type MessageType = "USER" | "SYSTEM"
+
+export interface Message {
+  id: string
+  contract_id: string
+  sender_id: string
+  sender_role: "ARTIST" | "VENUE"
+  message: string
+  type: MessageType
+  is_system_message: boolean
+  read_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface MessageListResponse {
+  data: Message[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export interface UnreadCountResponse {
+  contract_id: string
+  unread_count: number
+  last_unread_at?: string
+}
+
+// ============================================================================
+// AUDIT TYPES
+// ============================================================================
+
+export type AuditAction =
+  | "CREATE"
+  | "UPDATE_STATUS"
+  | "SEND_PROPOSAL"
+  | "ACCEPT_PROPOSAL"
+  | "REJECT_PROPOSAL"
+  | "SEND_MESSAGE"
+  | "SIGNATURE_SENT"
+  | "SIGNATURE_COMPLETED"
+  | "SIGNATURE_CANCELLED"
+  | "SOFT_DELETE"
+
+export interface AuditLog {
+  id: string
+  contract_id: string
+  user_id: string
+  user_role: "ARTIST" | "VENUE"
+  action: AuditAction
+  old_value?: Record<string, unknown>
+  new_value?: Record<string, unknown>
+  created_at: string
+}
+
+export interface AuditLogListResponse {
+  data: AuditLog[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export interface UserAuditResponse {
+  user_id: string
+  data: AuditLog[]
+  total: number
+  limit: number
+  offset: number
+}
+
+// ============================================================================
+// SIGNATURE DIGITAL TYPES
+// ============================================================================
+
+export type SignatureStatusType =
+  | "PENDING_SIGNATURE"
+  | "PARTIALLY_SIGNED"
+  | "FULLY_SIGNED"
+  | "SIGNATURE_CANCELLED"
+  | "SIGNATURE_EXPIRED"
+
+export interface Signer {
+  signer_id: string
+  signer_role: "ARTIST" | "VENUE"
+  signer_name: string
+  signed_at?: string
+  ip_address?: string
+}
+
+export interface SignatureStatus {
+  id: string
+  contract_id: string
+  zapSign_document_id?: string
+  status: SignatureStatusType
+  signers: Signer[]
+  pdf_url?: string
+  completed_at?: string
+  created_at: string
+  updated_at: string
 }
 
 // ============================================================================
