@@ -4,12 +4,15 @@ import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import useSWR from "swr"
-import { ArrowLeft, Loader2, Search } from "lucide-react"
+import { ArrowLeft, Loader2, MapPin, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useDebounce } from "@/hooks/use-debounce"
 import { venuesService } from "@/lib/services/venues.service"
+import { buildGoogleMapsUrl } from "@/lib/geo"
+import { useAuth } from "@/lib/auth-context"
+import { toast } from "sonner"
 
 interface CommunityVenueItem {
   id: string
@@ -20,12 +23,18 @@ interface CommunityVenueItem {
   city: string
   state: string
   status: string
+  exact_location?: {
+    latitude: number
+    longitude: number
+  } | null
   is_anonymous: boolean
+  created_by_user_id?: string
   created_at: string
   updated_at: string
 }
 
 export default function CommunityVenuesPage() {
+  const { user } = useAuth()
   const searchParams = useSearchParams()
   const created = searchParams.get("created") === "1"
 
@@ -33,7 +42,9 @@ export default function CommunityVenuesPage() {
   const debouncedSearch = useDebounce(search, 300)
   const searchQuery = debouncedSearch.trim()
 
-  const { data, isLoading, error } = useSWR<CommunityVenueItem[]>(
+  const [updatingVenueId, setUpdatingVenueId] = useState<string | null>(null)
+
+  const { data, isLoading, error, mutate } = useSWR<CommunityVenueItem[]>(
     ["community-venues", searchQuery],
     () =>
       venuesService.getCommunityVenues({
@@ -46,6 +57,52 @@ export default function CommunityVenuesPage() {
   )
 
   const venues = useMemo(() => data || [], [data])
+
+  const handleUpdateExactLocation = (venueId: string) => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocalização não suportada neste navegador")
+      return
+    }
+
+    setUpdatingVenueId(venueId)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          await venuesService.updateExactLocation(venueId, {
+            exact_latitude: pos.coords.latitude,
+            exact_longitude: pos.coords.longitude,
+          })
+
+          await mutate((prev) => {
+            if (!prev) return prev
+            return prev.map((venue) =>
+              venue.id === venueId
+                ? {
+                    ...venue,
+                    exact_location: {
+                      latitude: pos.coords.latitude,
+                      longitude: pos.coords.longitude,
+                    },
+                  }
+                : venue
+            )
+          }, false)
+
+          toast.success("Localização exata atualizada com sucesso")
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Erro ao atualizar localização exata"
+          toast.error(message)
+        } finally {
+          setUpdatingVenueId(null)
+        }
+      },
+      () => {
+        setUpdatingVenueId(null)
+        toast.error("Não foi possível obter sua localização")
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -123,6 +180,36 @@ export default function CommunityVenuesPage() {
                 <span>Criado em: {new Date(venue.created_at).toLocaleDateString("pt-BR")}</span>
                 {venue.is_anonymous && <span>Anonimo</span>}
               </div>
+              {venue.exact_location && (
+                <a
+                  href={buildGoogleMapsUrl(venue.exact_location)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                >
+                  <MapPin className="h-3 w-3" />
+                  Abrir localização exata no Google Maps
+                </a>
+              )}
+
+              {user && user.id === venue.created_by_user_id && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleUpdateExactLocation(venue.id)}
+                  disabled={updatingVenueId === venue.id}
+                >
+                  {updatingVenueId === venue.id ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Atualizando...
+                    </>
+                  ) : (
+                    "Atualizar localização exata"
+                  )}
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}
