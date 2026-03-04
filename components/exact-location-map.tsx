@@ -7,6 +7,8 @@ interface ExactLocationMapProps {
   longitude: number | null
   baseLatitude: number | null
   baseLongitude: number | null
+  cityName?: string
+  stateName?: string
   onPickLocation: (latitude: number, longitude: number) => void
 }
 
