@@ -740,31 +740,43 @@ function VenueProfileSettings() {
     if (!user) return
     const venueId = venueData?.id ?? user.id
 
-    if (exactLatitude !== null && (exactLatitude < -90 || exactLatitude > 90)) {
+    // Validar que ambas as coordenadas estão definidas
+    if (exactLatitude === null || exactLongitude === null) {
+      toast.error("É necessário definir latitude e longitude para salvar a localização exata")
+      return
+    }
+
+    if (exactLatitude < -90 || exactLatitude > 90) {
       toast.error("Latitude deve estar entre -90 e 90")
       return
     }
 
-    if (exactLongitude !== null && (exactLongitude < -180 || exactLongitude > 180)) {
+    if (exactLongitude < -180 || exactLongitude > 180) {
       toast.error("Longitude deve estar entre -180 e 180")
       return
     }
 
-    if (exactLatitude === null && exactLongitude === null) {
-      toast.error("Informe latitude ou longitude para atualizar")
-      return
-    }
-
+    console.log('🔄 [ExactLocation] Saving...', { lat: exactLatitude, lng: exactLongitude })
     setIsUpdatingExactLocation(true)
+    
     try {
       const response = await venuesService.updateExactLocation(venueId, {
-        exact_latitude: exactLatitude ?? undefined,
-        exact_longitude: exactLongitude ?? undefined,
+        exact_latitude: exactLatitude,
+        exact_longitude: exactLongitude,
       })
-      setExactLocationUpdatedAt(response.updated_at)
+      
+      // Update state only if we have a valid timestamp
+      if (response.updated_at) {
+        console.log('✅ [ExactLocation] Saved successfully at:', response.updated_at)
+        setExactLocationUpdatedAt(response.updated_at)
+      } else {
+        console.log('✅ [ExactLocation] Saved successfully (no timestamp)')
+      }
+      
       toast.success("Localização exata atualizada com sucesso")
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao atualizar localização exata"
+      console.error('❌ [ExactLocation] Save failed:', message)
       toast.error(message)
     } finally {
       setIsUpdatingExactLocation(false)
@@ -893,6 +905,8 @@ function VenueProfileSettings() {
             longitude={exactLongitude}
             baseLatitude={latitude}
             baseLongitude={longitude}
+            cityName={venueData?.city}
+            stateName={venueData?.state}
             isUpdating={isUpdatingExactLocation}
             onLatitudeChange={setExactLatitude}
             onLongitudeChange={setExactLongitude}
