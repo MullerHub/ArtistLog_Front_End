@@ -8,7 +8,16 @@ import type {
   UpdateArtistProfileRequest,
   UpdateLocationRequest,
   LocationResponse,
+  GeoPoint,
 } from "@/lib/types"
+
+const normalizeGeoPoint = (point: any): GeoPoint | undefined => {
+  if (!point) return undefined
+  return {
+    latitude: point.Latitude ?? point.latitude,
+    longitude: point.Longitude ?? point.longitude,
+  }
+}
 
 const normalizeArtistFilterParams = (filters?: ArtistFilters): Record<string, unknown> | undefined => {
   if (!filters) return undefined
@@ -49,6 +58,9 @@ const normalizeArtistResponse = (artist: ArtistResponse): ArtistResponse => {
     id: (artist as any).user_id || artist.id,
     // Map about_me from backend to bio for frontend
     bio: (artist as any).about_me || artist.bio,
+    // Normalize location fields (backend sends Latitude/Longitude with capital L)
+    base_location: normalizeGeoPoint(artist.base_location),
+    current_location: normalizeGeoPoint(artist.current_location),
   }
 
   if (mergedTags.length > 0) {
