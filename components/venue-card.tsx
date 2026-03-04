@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { GeoPoint, VenueResponse } from "@/lib/types"
 import { formatRating } from "@/lib/formatters"
-import { calculateDistance, formatDistance } from "@/lib/geo"
+import { buildGoogleMapsUrl, calculateDistance, formatDistance } from "@/lib/geo"
 import { getCityFromCoordinates } from "@/lib/city-api"
 import { useEffect, useMemo, useState } from "react"
 import { CommunityVenueBadge } from "@/components/community-venue-badge"
@@ -51,6 +51,11 @@ export function VenueCard({ venue, userLocation = null, distanceKm }: VenueCardP
     if (!userLocation || !baseLocation) return null
     return calculateDistance(userLocation, baseLocation)
   }, [baseLocation, distanceKm, userLocation])
+
+  const exactLocationUrl = useMemo(() => {
+    if (!venue.exact_location) return null
+    return buildGoogleMapsUrl(venue.exact_location)
+  }, [venue.exact_location])
 
   const baseLabel = useMemo(() => {
     // Priorizar a cidade direta do venue
@@ -112,8 +117,19 @@ export function VenueCard({ venue, userLocation = null, distanceKm }: VenueCardP
         <div className="flex flex-col gap-1 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <MapPin className="h-3 w-3" />
-            Base: {baseLabel}
+            Localização: {baseLabel}
           </span>
+          {exactLocationUrl && (
+            <a
+              href={exactLocationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-primary hover:underline"
+            >
+              <MapPin className="h-3 w-3" />
+              Abrir localização exata no mapa
+            </a>
+          )}
           {computedDistance !== null && (
             <span className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
