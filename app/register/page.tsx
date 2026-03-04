@@ -1,23 +1,54 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { Music, Mic, Building2, ArrowLeft, ArrowRight, Loader2, Eye, EyeOff } from "lucide-react"
+import { Music, Mic, Building2, ArrowLeft, ArrowRight, Loader2, Eye, EyeOff, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { authService } from "@/lib/services/auth.service"
+import { uploadService } from "@/lib/services/upload.service"
 import { CitySearch } from "@/components/CitySearch"
+import { API_BASE_URL } from "@/lib/api-client"
+import { unformatPhoneNumber } from "@/lib/formatters/phone"
 import type { City } from "@/lib/types"
 import { toast } from "sonner"
 
 type RoleType = "ARTIST" | "VENUE" | null
+
+const phoneDigitsRegex = /^\d{10,11}$/
+
+const normalizeWebsite = (value?: string) => {
+  if (!value) return undefined
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+
+  const url = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+
+  try {
+    new URL(url)
+    return url
+  } catch {
+    return undefined
+  }
+}
+
+const parseListInput = (value?: string) => {
+  if (!value) return []
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+const resolvePhotoUrl = (photoUrl: string) =>
+  photoUrl.startsWith("http") ? photoUrl : `${API_BASE_URL}${photoUrl}`
 
 const artistSchema = z.object({
   email: z.string().email("Email invalido"),
@@ -26,6 +57,26 @@ const artistSchema = z.object({
   stage_name: z.string().min(2, "Minimo 2 caracteres").max(150),
   bio: z.string().max(500).optional(),
   genres: z.string().max(300, "Máximo de 300 caracteres").optional(),
+  website: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || value === "" || Boolean(normalizeWebsite(value)), {
+      message: "Website deve ser uma URL válida (ex: https://exemplo.com)",
+    }),
+  phone: z
+    .string()
+    .optional()
+    .refine((value) => !value || value === "" || phoneDigitsRegex.test(unformatPhoneNumber(value)), {
+      message: "Telefone deve ter 10 ou 11 dígitos",
+    }),
+  whatsapp: z
+    .string()
+    .optional()
+    .refine((value) => !value || value === "" || phoneDigitsRegex.test(unformatPhoneNumber(value)), {
+      message: "WhatsApp deve ter 10 ou 11 dígitos",
+    }),
+  soundcloud_links: z.string().max(500, "Máximo de 500 caracteres").optional(),
   cache_base: z.coerce.number().positive("Valor deve ser maior que 0"),
   city: z.string().min(1, "Cidade obrigatoria"),
   state: z.string().min(2, "Estado obrigatorio").max(2, "Use a sigla (ex: SP)"),
@@ -176,6 +227,9 @@ function ArtistRegister({
   onBack,
 }: RegisterFormProps) {
   const [selectedCity, setSelectedCity] = useState<City | null>(null)
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [photoUploadError, setPhotoUploadError] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
@@ -206,12 +260,37 @@ function ArtistRegister({
     setValue("state", city.state, { shouldValidate: true })
   }
 
+  async function handleProfilePhotoUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setPhotoUploadError(null)
+    setIsUploadingPhoto(true)
+
+    try {
+      const response = await uploadService.uploadPhoto(file)
+      setProfilePhoto(response.file_url)
+      toast.success("Foto de perfil enviada com sucesso!")
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao enviar foto de perfil"
+      setPhotoUploadError(message)
+      toast.error(message)
+    } finally {
+      setIsUploadingPhoto(false)
+      event.target.value = ""
+    }
+  }
+
   async function onSubmit(data: ArtistForm) {
     setIsSubmitting(true)
     try {
       const genresList = data.genres
         ? data.genres.split(",").map((g) => g.trim()).filter(Boolean)
         : []
+      const soundcloudLinks = parseListInput(data.soundcloud_links)
+      const normalizedWebsite = normalizeWebsite(data.website)
+      const normalizedPhone = data.phone ? unformatPhoneNumber(data.phone) : undefined
+      const normalizedWhatsapp = data.whatsapp ? unformatPhoneNumber(data.whatsapp) : undefined
       
       await authService.signupArtist({
         email: data.email,
@@ -221,6 +300,11 @@ function ArtistRegister({
         cache_base: data.cache_base,
         city: data.city,
         state: data.state.toUpperCase(),
+        ...(normalizedWebsite && { website: normalizedWebsite }),
+        ...(normalizedPhone && normalizedPhone.length >= 10 && { phone: normalizedPhone }),
+        ...(normalizedWhatsapp && normalizedWhatsapp.length >= 10 && { whatsapp: normalizedWhatsapp }),
+        ...(soundcloudLinks.length > 0 && { soundcloud_links: soundcloudLinks }),
+        ...(profilePhoto && { photo_urls: [profilePhoto], profile_photo: profilePhoto }),
         ...(genresList.length > 0 && {
           genres: genresList,
           event_types: genresList,
@@ -333,6 +417,81 @@ function ArtistRegister({
                   {errors.genres && <p className="text-sm text-destructive">{errors.genres.message}</p>}
                 </div>
                 <div className="flex flex-col gap-2">
+                  <Label htmlFor="website">Website (opcional)</Label>
+                  <Input id="website" placeholder="https://seusite.com" {...register("website")} />
+                  {errors.website && <p className="text-sm text-destructive">{errors.website.message}</p>}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="soundcloud_links">Links do SoundCloud (opcional)</Label>
+                  <Input
+                    id="soundcloud_links"
+                    placeholder="https://soundcloud.com/usuario, https://soundcloud.com/usuario2"
+                    {...register("soundcloud_links")}
+                  />
+                  <p className="text-xs text-muted-foreground">Separe múltiplos links por vírgula.</p>
+                  {errors.soundcloud_links && (
+                    <p className="text-sm text-destructive">{errors.soundcloud_links.message}</p>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="phone">Telefone (opcional)</Label>
+                    <Input id="phone" placeholder="(11) 99999-9999" {...register("phone")} />
+                    {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="whatsapp">WhatsApp (opcional)</Label>
+                    <Input id="whatsapp" placeholder="(11) 99999-9999" {...register("whatsapp")} />
+                    {errors.whatsapp && <p className="text-sm text-destructive">{errors.whatsapp.message}</p>}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="profile_photo">Foto de perfil (opcional)</Label>
+                  <p className="text-xs text-muted-foreground">JPG/PNG/WebP · até 10MB</p>
+                  <div className="flex items-center gap-3">
+                    <label className="inline-flex">
+                      <input
+                        id="profile_photo"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handleProfilePhotoUpload}
+                        disabled={isUploadingPhoto}
+                      />
+                      <span className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
+                        {isUploadingPhoto ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="mr-2 h-4 w-4" /> Enviar foto
+                          </>
+                        )}
+                      </span>
+                    </label>
+                    {profilePhoto && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setProfilePhoto(null)}
+                        disabled={isUploadingPhoto}
+                      >
+                        <X className="mr-2 h-4 w-4" /> Remover
+                      </Button>
+                    )}
+                  </div>
+                  {profilePhoto && (
+                    <img
+                      src={resolvePhotoUrl(profilePhoto)}
+                      alt="Prévia da foto de perfil"
+                      className="h-24 w-24 rounded-md border object-cover"
+                    />
+                  )}
+                  {photoUploadError && <p className="text-sm text-destructive">{photoUploadError}</p>}
+                </div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="cache_base">Cache Base (R$)</Label>
                   <Input id="cache_base" type="number" placeholder="500" {...register("cache_base")} />
                   {errors.cache_base && <p className="text-sm text-destructive">{errors.cache_base.message}</p>}
@@ -371,13 +530,18 @@ function ArtistRegister({
               <Button
                 type="submit"
                 className="w-full"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploadingPhoto}
                 aria-label="Criar conta"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Criando conta...
+                  </>
+                ) : isUploadingPhoto ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Aguardando upload...
                   </>
                 ) : (
                   "Criar Conta"
