@@ -23,10 +23,14 @@ applyTo: lib/**, lib/services/**, hooks/**
 - Endpoints usados pelo frontend
 - Autenticação, headers, erros
 - Upload e notificações
+- Contratos avançados (propostas, mensagens, auditoria, assinatura)
+- Schedules, exact location e integrações externas de geocoding
 
 ### testing-guidelines.instructions.md
 applyTo: **/*.{test,spec}.ts, **/*.{test,spec}.tsx, tests/**
 - Testes de UI e integração
+- Estratégia E2E local (mock) e E2E real (backend)
+- Boas práticas para seletores estáveis em mobile
 
 ### upload-storage.instructions.md
 applyTo: components/**, lib/services/**
