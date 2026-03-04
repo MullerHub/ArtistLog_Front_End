@@ -17,6 +17,12 @@ applyTo: 'app/**,components/**,lib/**,hooks/**,styles/**'
 - `apiClient` is the single source for HTTP calls
 - Use React Query for async state and caching
 - Handle `loading`, `error`, and `empty` states explicitly
+- For contracts, keep each domain isolated in services:
+	- `contractsService` (core actions)
+	- `proposalsService` (counter-proposals)
+	- `messagesService` (chat/unread)
+	- `auditService` (timeline/logs)
+	- `signatureService` (digital signature status)
 
 ## UX and Accessibility
 
@@ -24,6 +30,7 @@ applyTo: 'app/**,components/**,lib/**,hooks/**,styles/**'
 - Provide visible focus and `aria-*` where needed
 - Form errors must be readable and near the input
 - Avoid layout shift by reserving space for content
+- In responsive tabs/buttons where label text can be hidden on small screens, expose stable selectors (`data-testid`) for E2E.
 
 ## Styling
 
