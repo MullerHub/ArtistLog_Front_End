@@ -30,7 +30,7 @@ import { schedulesService } from "@/lib/services/schedules.service"
 import { formatCurrency, formatRating, formatDayOfWeek, formatDate } from "@/lib/formatters"
 import { getCityFromCoordinates } from "@/lib/city-api"
 import { API_BASE_URL } from "@/lib/api-client"
-import type { ArtistResponse, GeoPoint, ScheduleResponse } from "@/lib/types"
+import type { ArtistResponse, GeoPoint, ScheduleResponse, SlotResponse } from "@/lib/types"
 
 export default function ArtistDetailPage({
   params,
@@ -271,11 +271,11 @@ export default function ArtistDetailPage({
               <div className="flex flex-col gap-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
-                  Base: {baseLabel}
+                  Residência: {baseLabel}
                 </span>
                 <span className="flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
-                  Atual: {currentLabel}
+                  Disponível em: {currentLabel}
                 </span>
               </div>
             </div>
@@ -432,107 +432,6 @@ export default function ArtistDetailPage({
 
 function ArtistSchedulePreview({ artistId }: { artistId: string }) {
   // Schedule público não está disponível na API - apenas /artists/me/schedule
-  const schedule = null
-
-  const slotsByDay = (schedule?.slots || []).reduce(
-    (acc, slot) => {
-      const day = slot.day_of_week
-      if (!acc[day]) acc[day] = []
-      acc[day].push(slot)
-      return acc
-    },
-    {} as Record<number, ScheduleResponse["slots"]>
-  )
-
-  const weekdayOrder = [0, 1, 2, 3, 4, 5, 6]
-
-  if (!schedule || !schedule.slots || schedule.slots.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Calendar className="h-5 w-5 text-primary" />
-            Agenda
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Nenhum horario disponivel cadastrado.</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Calendar className="h-5 w-5 text-primary" />
-          Horarios Disponiveis
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4 flex flex-wrap items-center gap-2 text-xs">
-          <Badge variant="outline">Duração mínima: {schedule.min_gig_duration} min</Badge>
-          {schedule.preferred_event_types?.map((eventType) => (
-            <Badge key={eventType} variant="outline">{eventType}</Badge>
-          ))}
-        </div>
-
-
-
-        <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-          {weekdayOrder.map((day) => {
-            const slots = slotsByDay[day] || []
-            return (
-              <div key={day} className="rounded-lg border border-border bg-card p-2">
-                <p className="text-[11px] font-semibold text-foreground">{formatDayOfWeek(day)}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {slots.length} slot{slots.length !== 1 ? "s" : ""}
-                </p>
-              </div>
-            )
-          })}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          {schedule.slots.map((slot) => (
-            <div
-              key={slot.id}
-              className="flex items-center justify-between rounded-lg border border-border px-4 py-3"
-            >
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-foreground">
-                  {formatDayOfWeek(slot.day_of_week)}
-                </span>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="text-sm text-muted-foreground">
-                  {slot.start_time} - {slot.end_time}
-                </span>
-                {slot.crosses_midnight && (
-                  <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900 dark:text-amber-100">
-                    🌙 madrugada
-                  </span>
-                )}
-              </div>
-              <Badge
-                variant={slot.is_booked ? "secondary" : "outline"}
-                className={!slot.is_booked ? "border-[hsl(var(--success))] text-[hsl(var(--success))]" : ""}
-              >
-                {slot.is_booked ? "Reservado" : "Disponivel"}
-              </Badge>
-            </div>
-          ))}
-        </div>
-        {schedule.notes && (
-          <>
-            <Separator className="my-4" />
-            <p className="text-sm text-muted-foreground">
-              <strong>Notas:</strong> {schedule.notes}
-            </p>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  )
+  // Esta função permanece como placeholder até que o endpoint público esteja disponível
+  return null
 }
