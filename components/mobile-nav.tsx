@@ -36,9 +36,10 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Artistas", href: "/artists", icon: Mic },
-  { label: "Venues", href: "/venues", icon: Building2 },
+  { label: "Contratantes", href: "/venues", icon: Building2 },
   { label: "Agenda", href: "/schedule", icon: Calendar, roles: ["ARTIST"] },
-  { label: "Contratos", href: "/contracts", icon: FileText },
+  // ⚠️ OCULTO NO MVP v1.0: Contratos será habilitado em v1.1+ após refinamento da UX
+  // { label: "Contratos", href: "/contracts", icon: FileText },
   { label: "Avaliacoes", href: "/reviews", icon: Star },
 ]
 
