@@ -21,6 +21,8 @@ interface ExactLocationManagerProps {
   longitude: number | null
   baseLatitude: number | null
   baseLongitude: number | null
+  cityName?: string
+  stateName?: string
   isUpdating: boolean
   onLatitudeChange: (value: number | null) => void
   onLongitudeChange: (value: number | null) => void
@@ -34,6 +36,8 @@ export function ExactLocationManager({
   longitude,
   baseLatitude,
   baseLongitude,
+  cityName,
+  stateName,
   isUpdating,
   onLatitudeChange,
   onLongitudeChange,
@@ -57,7 +61,7 @@ export function ExactLocationManager({
 
   const validateCoordinates = (lat: number | null, lon: number | null): string | null => {
     if (lat === null || lon === null) {
-      return "Informe latitude e longitude"
+      return "É necessário definir latitude E longitude para salvar a localização exata"
     }
 
     if (lat < -90 || lat > 90) {
@@ -96,6 +100,7 @@ export function ExactLocationManager({
       const updatedHistory = [newItem, ...history].slice(0, 5)
       setHistory(updatedHistory)
       localStorage.setItem("venue_location_history", JSON.stringify(updatedHistory))
+      console.log('💾 [History] Saved location:', { lat: latitude, lng: longitude })
     }
 
     setValidationError(null)
@@ -131,6 +136,8 @@ export function ExactLocationManager({
       <ExactLocationMap
         latitude={latitude}
         longitude={longitude}
+        cityName={cityName}
+        stateName={stateName}
         baseLatitude={baseLatitude}
         baseLongitude={baseLongitude}
         onPickLocation={(pickedLatitude, pickedLongitude) => {
@@ -191,7 +198,7 @@ export function ExactLocationManager({
         </Button>
       </div>
 
-      {latitude !== null && longitude !== null && (
+      {typeof latitude === 'number' && typeof longitude === 'number' && (
         <p className="text-xs text-muted-foreground">
           ExactLocation: {latitude.toFixed(6)}, {longitude.toFixed(6)}
         </p>
