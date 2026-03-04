@@ -8,7 +8,7 @@ description: ArtistLog - Visao geral do frontend (sempre carregado)
 Plataforma para conexão entre artistas (músicos, DJs, bandas) e venues (casas de show, bares, eventos). O frontend prioriza descoberta, contratos e agenda com UX acessível.
 
 ## Stack Frontend
-- Next.js 14 (App Router)
+- Next.js 16 (App Router)
 - TypeScript
 - Tailwind CSS + Shadcn UI
 - React Query para chamadas de API
@@ -22,6 +22,14 @@ Plataforma para conexão entre artistas (músicos, DJs, bandas) e venues (casas 
 - lib/ -> api client, services e types
 - hooks/ -> hooks reutilizáveis
 - styles/ -> estilos globais
+
+## Nomenclatura
+
+- **Venues** (técnico) = **Contratantes** (UI visível)
+  - Rotas: `/venues`
+  - Services: `venuesService`
+  - Types: `Venue`, `VenueType`
+  - Menu: "Contratantes"
 
 ## Princípios de UX e Acessibilidade
 
@@ -85,3 +93,45 @@ Autenticado:
 - Community Venues: criação, busca e claim
 - Contract Proposal: detalhes adicionais e tags
 - Notification Center: leitura e preferências
+- Contracts Workspace: tabs de Detalhes, Propostas, Chat, Auditoria e Assinatura
+- Artist/Venue Location: base location + exact location (map + persistência)
+
+## ⚠️ Status de Features (MVP v1.0)
+
+### Contratos - SEMI-PRONTO (SERÁ OCULTADO)
+- Backend: ✅ 100% pronto (todos endpoints funcionam)
+- Frontend UI: ⚠️ Implementada mas será refinada em v1.1+
+- E2E Tests: ⏳ Requer dados seed no backend
+- **Decisão MVP**: Ocultado do menu para não comprometer lançamento. Endpoints existem no backend para uso futuro.
+- **Plano**: Melhorar UX, E2E, notificações em v1.1+
+
+Ver: `.github/instructions/contracts.instructions.md` para detalhes
+
+### Descoberta (Discovery) - PRONTO ✅
+- Artists: busca, filtros, detalhes
+- Venues: busca, filtros, detalhes  
+- Reviews: listagem e criação
+
+### Gerenciamento - PRONTO ✅
+- Profiles: edição, fotos, disponibilidade
+- Localização: base + exact com mapa
+- Preferências: settings do usuário
+
+## Estado Atual (Mar/2026)
+
+- Contratos têm integração completa com módulos avançados:
+  - Propostas (`proposalsService`)
+  - Mensagens (`messagesService`)
+  - Auditoria (`auditService`)
+  - Assinatura digital (`signatureService`)
+- E2E de contratos foi separado em:
+  - `contracts-local.spec.ts` (mocks frontend)
+  - `contracts-real.spec.ts` (backend real com dados seed/mockados no backend)
+- Para mobile, os testes devem usar seletores estáveis (`data-testid`) em vez de labels visíveis.
+
+## Próximas Features (Contexto para Desenvolvimento)
+
+- Expandir cobertura E2E real para artistas/venues com seed controlado.
+- Consolidar fluxo de assinatura com feedback de status em tempo real.
+- Evoluir trilha de auditoria com filtros e paginação no UI.
+- Reforçar robustez de testes mobile em componentes com conteúdo responsivo/oculto.
