@@ -30,6 +30,7 @@ export const contractsService = {
 
   /**
    * Atualiza o status de um contrato
+   * Nota: Para enviar contra-proposta, use proposalsService.create()
    */
   async updateStatus(id: string, payload: UpdateContractStatusRequest): Promise<Contract> {
     return apiClient.patch<Contract>(`/contracts/${id}/status`, payload)
