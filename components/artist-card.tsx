@@ -99,11 +99,11 @@ function LocationInfo({ artist, userLocation }: LocationInfoProps) {
     <div className="flex flex-col gap-1 text-xs text-muted-foreground">
       <span className="flex items-center gap-1">
         <MapPin className="h-3 w-3" />
-        Base: {formatPoint(baseLocation, baseCity)}
+        Residência: {formatPoint(baseLocation, baseCity)}
       </span>
       <span className="flex items-center gap-1">
         <MapPin className="h-3 w-3" />
-        Atual: {formatPoint(currentLocation, currentCity)}
+        Disponível em: {formatPoint(currentLocation, currentCity)}
       </span>
       {distanceText && (
         <span className="flex items-center gap-1">
