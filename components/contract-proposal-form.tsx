@@ -48,7 +48,8 @@ export function ContractProposalForm({
   const [open, setOpen] = useState(false)
   const [eventDate, setEventDate] = useState("")
   const [finalPrice, setFinalPrice] = useState("")
-  const [details, setDetails] = useState("")
+  const [descriptionText, setDescriptionText] = useState("")
+  const [message, setMessage] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -65,27 +66,37 @@ export function ContractProposalForm({
     setIsSubmitting(true)
 
     try {
-      const tagsString = selectedTags.length > 0 
-        ? selectedTags.map(tagId => {
-            const tag = CONTRACT_TAGS.find(t => t.id === tagId)
-            return tag?.label || tagId
-          }).join(", ")
-        : undefined
+      const tagsString = selectedTags.length > 0
+        ? selectedTags
+            .map((tagId) => {
+              const tag = CONTRACT_TAGS.find((t) => t.id === tagId)
+              return tag?.label || tagId
+            })
+            .join(", ")
+        : ""
+
+      const fullDescription = [
+        descriptionText.trim(),
+        tagsString ? `Condições especiais: ${tagsString}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n")
 
       await contractsService.create({
         artist_id: artistId,
         venue_id: venueId,
         event_date: eventDate,
         final_price: parseFloat(finalPrice),
-        details: details || undefined,
-        tags: tagsString,
+        description: fullDescription || undefined,
+        message: message.trim() || undefined,
       })
 
       toast.success("Proposta enviada com sucesso!")
       setOpen(false)
       setEventDate("")
       setFinalPrice("")
-      setDetails("")
+      setDescriptionText("")
+      setMessage("")
       setSelectedTags([])
 
       // Revalidar lista de contratos
@@ -182,11 +193,11 @@ export function ContractProposalForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="details">Detalhes Adicionais</Label>
+                <Label htmlFor="description">Descrição do Contrato</Label>
                 <Textarea
-                  id="details"
-                  value={details}
-                  onChange={(e) => setDetails(e.target.value)}
+                  id="description"
+                  value={descriptionText}
+                  onChange={(e) => setDescriptionText(e.target.value)}
                   placeholder={mode === "artist-to-venue"
                     ? "Ex: Duração do show, repertório, necessidades técnicas, etc."
                     : "Ex: Requisitos especiais, estrutura do palco, infraestrutura, etc."}
@@ -194,7 +205,22 @@ export function ContractProposalForm({
                   className="resize-none"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Inclua informações importantes sobre o show
+                  Inclua uma descrição objetiva do escopo do contrato
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="message">Mensagem</Label>
+                <Textarea
+                  id="message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Escreva uma mensagem para contextualizar sua proposta"
+                  rows={3}
+                  className="resize-none"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Esta mensagem será exibida junto à proposta no contrato
                 </p>
               </div>
 
