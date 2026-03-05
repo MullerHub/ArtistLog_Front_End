@@ -149,7 +149,7 @@ export function NotificationCenter() {
             </Badge>
           )}
           {isConnected && (
-            <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-green-500 border border-background" />
+            <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-success border border-background" />
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -200,7 +200,7 @@ export function NotificationCenter() {
                       <div className="flex items-start justify-between gap-2">
                         <p className="font-medium text-sm">{notification.title}</p>
                         {!notification.is_read && (
-                          <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0 mt-1" />
+                          <div className="h-2 w-2 rounded-full bg-info flex-shrink-0 mt-1" />
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
