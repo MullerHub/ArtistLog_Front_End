@@ -1,6 +1,6 @@
 import React from "react"
 import type { Metadata, Viewport } from "next"
-import { Inter, Space_Mono } from "next/font/google"
+import { Inter } from "next/font/google"
 import { Toaster } from "sonner"
 import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -9,7 +9,6 @@ import "./globals.css"
 import "leaflet/dist/leaflet.css"
 
 const _inter = Inter({ subsets: ["latin"] })
-const _spaceMono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "ArtistLog - Conectando Artistas e Contratantes",
