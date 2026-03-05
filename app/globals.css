@@ -67,8 +67,8 @@
     --accent-foreground: 222 47% 11%;
     --destructive: 0 62% 31%;
     --destructive-foreground: 0 0% 100%;
-    --border: 223 47% 18%;
-    --input: 223 47% 18%;
+    --border: 220 20% 26%;
+    --input: 220 20% 26%;
     --ring: 272 48% 46%;
     --chart-1: 272 48% 56%;
     --chart-2: 39 100% 55%;
@@ -81,7 +81,7 @@
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 223 47% 14%;
     --sidebar-accent-foreground: 220 14% 96%;
-    --sidebar-border: 223 47% 18%;
+    --sidebar-border: 220 20% 26%;
     --sidebar-ring: 272 48% 46%;
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
