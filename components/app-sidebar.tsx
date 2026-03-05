@@ -49,13 +49,13 @@ export function AppSidebar() {
   )
 
   return (
-    <aside className="hidden w-64 flex-col border-r border-border bg-card lg:flex">
-      <Link href="/dashboard" className="flex h-16 items-center justify-between gap-2 border-b border-border px-6 transition-opacity hover:opacity-80">
+    <aside className="hidden w-64 flex-col border-r border-sidebar-border text-white dark:text-sidebar-foreground bg-gradient-to-b from-[hsl(272,48%,46%)] to-[hsl(272,40%,36%)] dark:from-[hsl(223,47%,10%)] dark:to-[hsl(223,47%,10%)] lg:flex">
+      <Link href="/dashboard" className="flex h-16 items-center justify-between gap-2 border-b border-sidebar-border px-6 transition-opacity hover:opacity-80">
         <div className="flex items-center gap-2">
-          <div className="rounded-lg bg-primary p-1.5">
-            <Music className="h-5 w-5 text-primary-foreground" />
+          <div className="rounded-lg bg-white/20 p-1.5 dark:bg-primary">
+            <Music className="h-5 w-5 text-white dark:text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold text-foreground">ArtistLog</span>
+          <span className="text-lg font-bold text-white dark:text-sidebar-foreground">ArtistLog</span>
         </div>
         <NotificationCenter />
       </Link>
@@ -71,8 +71,8 @@ export function AppSidebar() {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-white/20 text-white dark:bg-primary dark:text-primary-foreground"
+                    : "text-white/70 hover:bg-white/10 hover:text-white dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground"
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -83,23 +83,23 @@ export function AppSidebar() {
         </nav>
       </ScrollArea>
 
-      <Separator />
+      <Separator className="bg-white/20 dark:bg-border" />
       <div className="flex flex-col gap-2 p-4">
         {user && (
-          <div className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+          <div className="flex items-center gap-3 rounded-lg bg-white/10 px-3 py-2 dark:bg-muted">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white dark:bg-primary dark:text-primary-foreground">
               {user.email.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm font-medium text-foreground">{user.email}</p>
-              <p className="text-xs text-muted-foreground capitalize">{user.role.toLowerCase()}</p>
+              <p className="truncate text-sm font-medium text-white dark:text-foreground">{user.email}</p>
+              <p className="text-xs text-white/60 capitalize dark:text-muted-foreground">{user.role.toLowerCase()}</p>
             </div>
           </div>
         )}
         <div className="flex items-center gap-2">
           <Link
             href="/settings"
-            className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2 text-sm text-white/70 transition-colors hover:bg-white/10 hover:text-white dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground"
           >
             <Settings className="h-4 w-4" />
             Configuracoes
@@ -109,7 +109,7 @@ export function AppSidebar() {
 
         <Button
           variant="ghost"
-          className="justify-start gap-3 text-muted-foreground hover:text-destructive"
+          className="justify-start gap-3 text-white/70 hover:bg-white/10 hover:text-white dark:text-muted-foreground dark:hover:text-destructive"
           onClick={logout}
         >
           <LogOut className="h-4 w-4" />
