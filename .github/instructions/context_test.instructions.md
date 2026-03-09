@@ -36,5 +36,14 @@ applyTo: **/*.{test,spec}.ts, **/*.{test,spec}.tsx, tests/**
 applyTo: components/**, lib/services/**
 - UX de upload e validações no cliente
 
+### deployment.instructions.md
+applyTo: vercel.json, next.config.mjs, .env*, DEPLOYMENT.md, VERCEL_DEPLOY.md
+- Configuração de produção e deploy na Vercel
+- Variáveis de ambiente obrigatórias e opcionais
+- Processo de deploy via dashboard ou CLI
+- Validação pré e pós-deploy
+- Troubleshooting comum
+- Domínios customizados e múltiplos ambientes
+
 ## Nota
 Documentação de banco de dados, handlers backend e segurança foram removidos para manter este chat 100% frontend.
