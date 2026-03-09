@@ -128,6 +128,26 @@ Ver: `.github/instructions/contracts.instructions.md` para detalhes
   - `contracts-local.spec.ts` (mocks frontend)
   - `contracts-real.spec.ts` (backend real com dados seed/mockados no backend)
 - Para mobile, os testes devem usar seletores estáveis (`data-testid`) em vez de labels visíveis.
+- Cache de sessão E2E implementado em arquivo temporário para evitar rate limit do backend
+
+## Deploy e Produção
+
+### Status: ✅ Pronto para Vercel
+- Build validado: `npm run build` funciona
+- Configuração: `vercel.json` com headers de segurança
+- Variável obrigatória: `NEXT_PUBLIC_API_URL` (backend URL)
+- Script de validação: `./pre-deploy-check.sh`
+
+### Quick Deploy
+1. Conectar repo no Vercel: https://vercel.com/new
+2. Configurar `NEXT_PUBLIC_API_URL` em Environment Variables
+3. Deploy automático em ~2-3 min
+
+### Docs de Deploy
+- **Quick Start:** `VERCEL_DEPLOY.md` (3 passos)
+- **Guia Completo:** `DEPLOYMENT.md`
+- **Checklist:** `DEPLOY_CHECKLIST.md`
+- **Instruções Contextuais:** `.github/instructions/deployment.instructions.md`
 
 ## Próximas Features (Contexto para Desenvolvimento)
 
