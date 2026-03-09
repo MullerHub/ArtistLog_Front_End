@@ -25,6 +25,9 @@ dist/
 # Testing
 /coverage
 .nyc_output
+/test-results
+/playwright-report
+playwright/.cache
 
 # Environment variables (NEVER commit secrets!)
 .env
@@ -67,6 +70,8 @@ pnpm-debug.log*
 pnpm-debug.log*.*
 lerna-debug.log*
 .pnpm-debug.log
+dev.log
+dev-server.log
 
 # Vercel
 .vercel
