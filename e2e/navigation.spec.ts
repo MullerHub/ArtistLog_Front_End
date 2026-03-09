@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { setupRealBackendSession } from './fixtures/real-backend-session'
 
 /**
  * Note: These tests use both authenticated and unauthenticated flows
@@ -21,14 +22,8 @@ test.describe('Public Pages', () => {
 })
 
 test.describe('App Navigation', () => {
-  test.beforeEach(async ({ page, context }) => {
-    // Set authentication token in localStorage if needed
-    await context.addInitScript(() => {
-      localStorage.setItem(
-        'auth_token',
-        'your-test-token-here'
-      )
-    })
+  test.beforeEach(async ({ page, request }) => {
+    await setupRealBackendSession(page, request)
   })
 
   test('should navigate between pages', async ({ page }) => {
@@ -61,6 +56,10 @@ test.describe('App Navigation', () => {
 })
 
 test.describe('Responsive Design', () => {
+  test.beforeEach(async ({ page, request }) => {
+    await setupRealBackendSession(page, request)
+  })
+
   test('should be responsive on mobile', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 })
