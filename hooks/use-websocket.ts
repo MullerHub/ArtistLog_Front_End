@@ -7,7 +7,8 @@ interface WebSocketMessage {
 }
 
 export function useWebSocket() {
-  const { token } = useAuth()
+  const auth = useAuth()
+  const token = auth?.user?.id
   const [isConnected, setIsConnected] = useState(false)
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
