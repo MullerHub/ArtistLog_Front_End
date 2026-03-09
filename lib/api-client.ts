@@ -2,7 +2,41 @@
 // ArtistLog - API Client (fetch-based)
 // ============================================
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+const LOCAL_API_URL = "http://localhost:8080"
+const RENDER_API_URL = "https://artistlog-backend-latest.onrender.com"
+
+function normalizeBaseUrl(url: string): string {
+  return url.replace(/\/+$/, "")
+}
+
+function isLocalhostHost(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1"
+}
+
+function isLocalUrl(url: string): boolean {
+  return /localhost|127\.0\.0\.1/i.test(url)
+}
+
+function resolveApiBaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL?.trim()
+  const hasWindow = typeof window !== "undefined"
+  const currentHost = hasWindow ? window.location.hostname : ""
+  const runningLocally = hasWindow && isLocalhostHost(currentHost)
+
+  if (envUrl) {
+    if (!runningLocally && hasWindow && isLocalUrl(envUrl)) {
+      console.warn(
+        `[API] NEXT_PUBLIC_API_URL (${envUrl}) points to localhost in production. Falling back to ${RENDER_API_URL}.`
+      )
+      return RENDER_API_URL
+    }
+    return normalizeBaseUrl(envUrl)
+  }
+
+  return runningLocally ? LOCAL_API_URL : RENDER_API_URL
+}
+
+const API_BASE_URL = resolveApiBaseUrl()
 
 class ApiError extends Error {
   status: number
