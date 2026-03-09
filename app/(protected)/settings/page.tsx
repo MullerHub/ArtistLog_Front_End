@@ -766,7 +766,7 @@ function VenueProfileSettings() {
       })
       
       // Update state only if we have a valid timestamp
-      if (response.updated_at) {
+      if (response.updated_at && typeof response.updated_at === 'string') {
         console.log('✅ [ExactLocation] Saved successfully at:', response.updated_at)
         setExactLocationUpdatedAt(response.updated_at)
       } else {
