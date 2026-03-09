@@ -76,7 +76,7 @@ export default function VenuesPage() {
     setOffset(0)
   }, [debouncedSearch, debouncedCity, originFilter])
 
-  const mapNearbyToVenue = useCallback((venue: NearbyVenueResponse): VenueResponse => {
+  const mapNearbyToVenue = useCallback((venue: NearbyVenueResponse): Omit<VenueResponse, 'status'> & { status?: string } => {
     return {
       id: venue.venue_id,
       venue_name: venue.venue_name,
@@ -87,12 +87,11 @@ export default function VenuesPage() {
       infrastructure: venue.infrastructure || "",
       venue_photos: venue.venue_photos || [],
       profile_photo: venue.profile_photo || undefined,
-      hours: venue.hours || undefined,
       phone: venue.phone || undefined,
       website: venue.website || undefined,
       rating: venue.average_rating || 0,
       reviews_count: venue.total_reviews || 0,
-      base_location: venue.base_location || venue.location || null,
+      base_location: venue.base_location || venue.location || undefined,
       exact_location: venue.exact_location || undefined,
       origin: venue.origin,
       is_community: venue.origin === "COMMUNITY",
@@ -100,7 +99,7 @@ export default function VenuesPage() {
       created_by_user_id: venue.created_by_user_id || undefined,
       created_at: venue.created_at,
       updated_at: venue.updated_at,
-    }
+    } as any
   }, [])
 
   const isGeoFilterActive = !!userLocation && radiusKm > 0
@@ -119,7 +118,7 @@ export default function VenuesPage() {
       // Aplicar filtro de cidade se ativo (substring matching)
       if (cityQuery) {
         mapped = mapped.filter((venue) => 
-          venue.city.toLowerCase().includes(cityQuery.toLowerCase())
+          venue.city && venue.city.toLowerCase().includes(cityQuery.toLowerCase())
         )
       }
       
@@ -144,7 +143,7 @@ export default function VenuesPage() {
     let items = data?.items || []
     if (cityQuery) {
       items = items.filter((venue) => 
-        venue.city.toLowerCase().includes(cityQuery.toLowerCase())
+        venue.city && venue.city.toLowerCase().includes(cityQuery.toLowerCase())
       )
     }
     
