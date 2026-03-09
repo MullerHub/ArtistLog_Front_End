@@ -132,22 +132,35 @@ Ver: `.github/instructions/contracts.instructions.md` para detalhes
 
 ## Deploy e Produção
 
-### Status: ✅ Pronto para Vercel
+### Status: ✅ Ativo em Produção (Vercel)
+- Frontend: `https://artist-log-front-end.vercel.app` (Vercel)
+- Backend: `https://artistlog-backend-latest.onrender.com` (Render)
 - Build validado: `npm run build` funciona
 - Configuração: `vercel.json` com headers de segurança
-- Variável obrigatória: `NEXT_PUBLIC_API_URL` (backend URL)
-- Script de validação: `./pre-deploy-check.sh`
+- API conectada: ✅ CORS corrigido (single origin)
 
-### Quick Deploy
-1. Conectar repo no Vercel: https://vercel.com/new
-2. Configurar `NEXT_PUBLIC_API_URL` em Environment Variables
-3. Deploy automático em ~2-3 min
+### API Base URL Resolution
+`lib/api-client.ts` implementa fallback inteligente:
+```
+Production (Vercel) sem NEXT_PUBLIC_API_URL? → https://artistlog-backend-latest.onrender.com
+Development (localhost)? → http://localhost:8080
+```
+
+### Variáveis de Ambiente
+**Produção (Render):** Env var `CORS_ALLOWED_ORIGINS` deve ter apenas `Vercel domain`
+```
+CORS_ALLOWED_ORIGINS=https://artist-log-front-end.vercel.app
+```
+
+**Frontend (Vercel):**
+```
+NEXT_PUBLIC_API_URL=https://artistlog-backend-latest.onrender.com
+```
 
 ### Docs de Deploy
-- **Quick Start:** `VERCEL_DEPLOY.md` (3 passos)
-- **Guia Completo:** `DEPLOYMENT.md`
-- **Checklist:** `DEPLOY_CHECKLIST.md`
-- **Instruções Contextuais:** `.github/instructions/deployment.instructions.md`
+- **Deployment:** `.github/instructions/deployment.instructions.md`
+- **CORS Setup:** `CORS_ISSUE.md` (diagnóstico e solução)
+- **API Health:** `/debug/health` (verificar conectividade no frontend)
 
 ## Próximas Features (Contexto para Desenvolvimento)
 

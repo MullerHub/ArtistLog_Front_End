@@ -17,8 +17,15 @@ applyTo: 'vercel.json,next.config.mjs,.env*,DEPLOYMENT.md,VERCEL_DEPLOY.md'
 
 **Production (OBRIGATÓRIO):**
 ```bash
-NEXT_PUBLIC_API_URL=https://seu-backend.vercel.app
+NEXT_PUBLIC_API_URL=https://artistlog-backend-latest.onrender.com
 ```
+(Nota: Frontend tem fallback automático se esta var não estiver definida)
+
+**Backend (Render) - OBRIGATÓRIO:**
+```bash
+CORS_ALLOWED_ORIGINS=https://artist-log-front-end.vercel.app
+```
+(Sem localhost em produção. Deve retornar single `Access-Control-Allow-Origin` header)
 
 **Optional (have defaults):**
 ```bash

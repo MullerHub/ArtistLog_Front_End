@@ -7,7 +7,25 @@ applyTo: 'lib/**,lib/services/**,hooks/**'
 
 ## Base URL and Auth
 
-- Base URL: `NEXT_PUBLIC_API_URL` (fallback `http://localhost:8080`)
+### Base URL Resolution (Smart Fallback)
+Implementado em `lib/api-client.ts` > `resolveApiBaseUrl()`:
+
+1. **Se `NEXT_PUBLIC_API_URL` está definido:**
+   - E frontend rode em `localhost` → usa como-é (útil para dev local)
+   - E frontend rode em produção (Vercel) + aponta para `localhost` → fallback para Render
+   - E frontend rode em produção + aponta para URL válida → usa como-é ✅
+
+2. **Se `NEXT_PUBLIC_API_URL` não definido:**
+   - Frontend em `localhost` → fallback para `http://localhost:8080`
+   - Frontend em produção (Vercel) → fallback para `https://artistlog-backend-latest.onrender.com` ✅
+
+**Importante:** Em produção na Vercel, se `NEXT_PUBLIC_API_URL` não estiver configurada ou apontar para `localhost`, o frontend automaticamente cai no fallback Render. Isso protege contra misconfigurações.
+
+### Produção Current (Mar/2026)
+- **Frontend URL:** `https://artist-log-front-end.vercel.app`
+- **Backend URL:** `https://artistlog-backend-latest.onrender.com`
+- **CORS (Backend):** `Access-Control-Allow-Origin: https://artist-log-front-end.vercel.app` (single origin)
+
 - Auth header: `Authorization: Bearer <token>`
 - Token storage: `localStorage['artistlog_token']`
 - User cache: `localStorage['artistlog_user']`
