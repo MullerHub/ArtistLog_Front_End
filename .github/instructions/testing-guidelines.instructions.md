@@ -31,3 +31,14 @@ applyTo: '**/*.{test,spec}.ts,**/*.{test,spec}.tsx,tests/**'
 - Keep tests small and fast
 - Avoid heavy fixtures; build data inline when possible
 - Rodar smoke em Chromium para feedback rápido e suíte completa em todos os projetos no CI.
+
+## E2E Authentication and Backend
+
+- Real backend fixture: `e2e/fixtures/real-backend-session.ts`
+- Session caching: File-based cache em `/tmp/artistlog-e2e-session-cache.json` (TTL 5 min)
+- Evita rate limit: Backend permite max 5 logins/15min por IP, cache reutiliza sessão
+- Environment variables:
+  - `E2E_EMAIL` - email do usuário de teste
+  - `E2E_PASSWORD` - senha do usuário
+  - `NEXT_PUBLIC_API_URL` - URL do backend (local ou staging)
+- Run com `--workers=1` para garantir compartilhamento de cache entre specs
