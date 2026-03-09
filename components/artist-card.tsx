@@ -148,7 +148,7 @@ export function ArtistCard({ artist, userLocation = null }: ArtistCardProps) {
             {hasPhoto ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={resolvePhotoUrl(artist.photo_urls[0]) || ""}
+                src={resolvePhotoUrl(artist.photo_urls?.[0]) || ""}
                 alt={artist.stage_name}
                 className="h-12 w-12 rounded-full object-cover"
               />
