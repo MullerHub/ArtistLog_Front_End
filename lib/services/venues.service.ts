@@ -196,7 +196,6 @@ export const venuesService = {
     capacity: number
     city: string
     state: string
-    status: string
     exact_location?: {
       latitude: number
       longitude: number
@@ -211,10 +210,11 @@ export const venuesService = {
     if (Array.isArray(venues)) {
       return venues.map((venue: any) => ({
         ...venue,
+        status: venue.status || "ACTIVE",
         exact_location: normalizeGeoPoint(venue.exact_location) ?? null,
       }))
     }
-    return venues
+    return venues as any
   },
 
   async getClaimCandidates(params: {
