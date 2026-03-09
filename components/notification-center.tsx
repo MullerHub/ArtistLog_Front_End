@@ -63,7 +63,7 @@ export function NotificationCenter() {
   // Handle new WebSocket messages
   useEffect(() => {
     if (lastMessage?.type === "notification") {
-      const newNotification = lastMessage.payload as Notification
+      const newNotification = lastMessage.payload as unknown as Notification
       
       // Add to notifications list
       setNotifications(prev => [newNotification, ...prev])
