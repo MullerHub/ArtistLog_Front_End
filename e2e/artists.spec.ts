@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { setupRealBackendSession } from './fixtures/real-backend-session'
 
 test.describe('Artists Page', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }) => {
+    await setupRealBackendSession(page, request)
     // Navigate to artists page
     await page.goto('/artists')
   })
@@ -90,13 +92,13 @@ test.describe('Artists Page', () => {
 })
 
 test.describe('Artist Detail Page', () => {
+  test.beforeEach(async ({ page, request }) => {
+    await setupRealBackendSession(page, request)
+  })
+
   test('should display artist profile information', async ({ page }) => {
-    // Navigate to a specific artist page (this may need authentication)
-    // Using a relative path that should exist
-    await page.goto('/artists/test-artist-id', { waitUntil: 'networkidle' }).catch(() => {
-      // Fallback if specific artist doesn't exist
-      return page.goto('/artists')
-    })
+    // Navigate to artists list first
+    await page.goto('/artists', { waitUntil: 'networkidle' })
 
     // Check if main content is present
     const mainContent = page.locator('main')
@@ -106,6 +108,9 @@ test.describe('Artist Detail Page', () => {
   test('should have artist actions', async ({ page }) => {
     // Navigate to artists page first
     await page.goto('/artists', { waitUntil: 'networkidle' })
+
+    // Check if page loaded
+    await expect(page.locator('main')).toBeVisible({ timeout: 5000 })
 
     // Try to find and click on an artist
     const artistLink = page.locator('a[href*="/artists/"]').first()
