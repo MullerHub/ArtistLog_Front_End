@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { setupRealBackendSession } from './fixtures/real-backend-session'
 
 test.describe('Exact Location Saving Flow', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, request }) => {
+    await setupRealBackendSession(page, request)
     // Mock API responses for geocoding
     await page.route('*/**/api/geocoding/**', async (route) => {
       await route.abort()
