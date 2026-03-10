@@ -15,24 +15,7 @@ import { useAuth } from "@/lib/auth-context"
 import { CommunityVenueLocationPreview } from "@/components/community-venue-location-preview"
 import { toast } from "sonner"
 
-interface CommunityVenueItem {
-  id: string
-  venue_name: string
-  description: string
-  infrastructure: string
-  capacity: number
-  city: string
-  state: string
-  status: string
-  exact_location?: {
-    latitude: number
-    longitude: number
-  } | null
-  is_anonymous: boolean
-  created_by_user_id?: string
-  created_at: string
-  updated_at: string
-}
+type CommunityVenueItem = Awaited<ReturnType<typeof venuesService.getCommunityVenues>>[number]
 
 export default function CommunityVenuesPage() {
   const { user } = useAuth()

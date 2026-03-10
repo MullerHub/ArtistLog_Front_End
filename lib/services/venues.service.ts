@@ -196,6 +196,7 @@ export const venuesService = {
     capacity: number
     city: string
     state: string
+    status: string
     exact_location?: {
       latitude: number
       longitude: number

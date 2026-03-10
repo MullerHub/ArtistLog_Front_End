@@ -89,11 +89,11 @@ export function HealthCheckPanel() {
                 {cors.error}
               </div>
             )}
-            {cors.sample && (
+            {cors.sample != null && (
               <details className="text-xs">
                 <summary className="cursor-pointer hover:underline">Sample Data</summary>
                 <pre className="mt-2 bg-slate-50 p-2 rounded overflow-auto text-xs">
-                  {JSON.stringify(cors.sample, null, 2)}
+                  {JSON.stringify(cors.sample as unknown, null, 2)}
                 </pre>
               </details>
             )}

@@ -1,26 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
-    ignoreBuildErrors: true,
+    tsconfigPath: './tsconfig.json',
   },
   images: {
     unoptimized: true,
   },
   logging: {
     fetches: {
-      fullUrl: false,
+      fullUrl: true,
     },
-  },
-  webpack: (config, { client }) => {
-    if (client) {
-      config.infrastructureLogging = {
-        debug: [],
-        log: [],
-        info: [],
-        warn: [],
-      }
-    }
-    return config
   },
   turbopack: {},
 }
