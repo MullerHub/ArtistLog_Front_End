@@ -7,6 +7,13 @@ applyTo: 'vercel.json,next.config.mjs,.env*,DEPLOYMENT.md,VERCEL_DEPLOY.md'
 
 ## Production Environment
 
+## Local Development Policy
+
+- Branch de trabalho: `development` (ou branches derivadas dela)
+- Executar frontend localmente: `npm run dev`
+- Usar backend local durante implementação: `NEXT_PUBLIC_API_URL=http://localhost:8080`
+- Só validar em Vercel quando a feature estiver pronta para promoção
+
 ### Platform: Vercel (Recommended)
 - Framework: Next.js 16 (auto-detected)
 - Build Command: `npm run build` (automatic)

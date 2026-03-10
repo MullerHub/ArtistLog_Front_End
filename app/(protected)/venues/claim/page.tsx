@@ -8,7 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { venuesService } from "@/lib/services/venues.service"
 import { CitySearch } from "@/components/CitySearch"
 import { FormErrorsAlert } from "@/components/form-errors-alert"
+import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 interface ClaimCandidate {
   id: string
@@ -25,6 +27,7 @@ interface ClaimCandidate {
 
 export default function ClaimVenuePage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [isSearching, setIsSearching] = useState(false)
   const [candidates, setCandidates] = useState<ClaimCandidate[]>([])
   const [errors, setErrors] = useState<string[]>([])
@@ -39,14 +42,28 @@ export default function ClaimVenuePage() {
     distance: "10",
   })
 
-  const handleCitySelect = (city: { name: string; state: string; lat: number; lon: number }) => {
+  const handleCitySelect = (city: { name: string; state: string; latitude: number; longitude: number }) => {
     setSearchParams(prev => ({
       ...prev,
       city: city.name,
       state: city.state,
-      lat: city.lat.toString(),
-      lon: city.lon.toString(),
+      lat: city.latitude.toString(),
+      lon: city.longitude.toString(),
     }))
+  }
+
+  if (user?.role === "ARTIST") {
+    return (
+      <div className="container mx-auto max-w-3xl space-y-6 p-6">
+        <h1 className="text-2xl font-bold">Reivindicação indisponível para artistas</h1>
+        <p className="text-sm text-muted-foreground">
+          Apenas contas do tipo venue podem reivindicar uma casa de show comunitária.
+        </p>
+        <Link href="/venues" className="inline-block">
+          <Button variant="outline">Voltar para venues</Button>
+        </Link>
+      </div>
+    )
   }
 
   const handleSearch = async (e: React.FormEvent) => {

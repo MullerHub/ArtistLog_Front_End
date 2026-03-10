@@ -416,15 +416,17 @@ export default function VenueDetailPage({
 
               <Separator />
 
-              <div className="rounded-lg bg-amber-100 dark:bg-amber-900/30 p-3">
-                <p className="text-xs text-amber-900 dark:text-amber-200">
-                  💡 <strong>Dica:</strong> Se você é o proprietário desta venue, pode{" "}
-                  <Link href="/venues/claim" className="underline font-medium">
-                    reivindicar este perfil
-                  </Link>{" "}
-                  para gerenciá-lo oficialmente e receber propostas de contrato diretamente na plataforma.
-                </p>
-              </div>
+              {user?.role === "VENUE" && (
+                <div className="rounded-lg bg-amber-100 p-3 dark:bg-amber-900/30">
+                  <p className="text-xs text-amber-900 dark:text-amber-200">
+                    💡 <strong>Dica:</strong> Se você é o proprietário desta venue, pode{" "}
+                    <Link href="/venues/claim" className="font-medium underline">
+                      reivindicar este perfil
+                    </Link>{" "}
+                    para gerenciá-lo oficialmente e receber propostas de contrato diretamente na plataforma.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

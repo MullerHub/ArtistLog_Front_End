@@ -138,6 +138,12 @@ Ver: `.github/instructions/contracts.instructions.md` para detalhes
 - `main` fica reservado para release estável e deploy de produção
 - Só promover para `main` quando a entrega estiver validada (tests + revisão)
 
+### Modo Desenvolvimento Local (Obrigatório durante implementação)
+- Frontend local: `npm run dev`
+- Backend local: `http://localhost:8080`
+- Arquivo local: `.env.local` com `NEXT_PUBLIC_API_URL=http://localhost:8080`
+- Evitar desenvolver apontando para backend de produção
+
 ### Status: ✅ Ativo em Produção (Vercel)
 - Frontend: `https://artist-log-front-end.vercel.app` (Vercel)
 - Backend: `https://artistlog-backend-latest.onrender.com` (Render)

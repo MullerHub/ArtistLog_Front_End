@@ -12,6 +12,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { venuesService } from "@/lib/services/venues.service"
 import { buildGoogleMapsUrl } from "@/lib/geo"
 import { useAuth } from "@/lib/auth-context"
+import { CommunityVenueLocationPreview } from "@/components/community-venue-location-preview"
 import { toast } from "sonner"
 
 interface CommunityVenueItem {
@@ -67,10 +68,13 @@ export default function CommunityVenuesPage() {
     setUpdatingVenueId(venueId)
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        const targetLat = pos.coords.latitude
+        const targetLon = pos.coords.longitude
+
         try {
           await venuesService.updateExactLocation(venueId, {
-            exact_latitude: pos.coords.latitude,
-            exact_longitude: pos.coords.longitude,
+            exact_latitude: targetLat,
+            exact_longitude: targetLon,
           })
 
           await mutate((prev) => {
@@ -80,8 +84,8 @@ export default function CommunityVenuesPage() {
                 ? {
                     ...venue,
                     exact_location: {
-                      latitude: pos.coords.latitude,
-                      longitude: pos.coords.longitude,
+                      latitude: targetLat,
+                      longitude: targetLon,
                     },
                   }
                 : venue
@@ -90,8 +94,19 @@ export default function CommunityVenuesPage() {
 
           toast.success("Localização exata atualizada com sucesso")
         } catch (err) {
-          const message = err instanceof Error ? err.message : "Erro ao atualizar localização exata"
-          toast.error(message)
+          // Defensive revalidation: some backends may persist the update and still return an error.
+          const refreshed = await mutate()
+          const updatedVenue = refreshed?.find((venue) => venue.id === venueId)
+          const saved = !!updatedVenue?.exact_location &&
+            Math.abs(updatedVenue.exact_location.latitude - targetLat) < 0.0001 &&
+            Math.abs(updatedVenue.exact_location.longitude - targetLon) < 0.0001
+
+          if (saved) {
+            toast.success("Localização exata atualizada com sucesso")
+          } else {
+            const message = err instanceof Error ? err.message : "Erro ao atualizar localização exata"
+            toast.error(message)
+          }
         } finally {
           setUpdatingVenueId(null)
         }
@@ -181,15 +196,22 @@ export default function CommunityVenuesPage() {
                 {venue.is_anonymous && <span>Anonimo</span>}
               </div>
               {venue.exact_location && (
-                <a
-                  href={buildGoogleMapsUrl(venue.exact_location)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                >
-                  <MapPin className="h-3 w-3" />
-                  Abrir localização exata no Google Maps
-                </a>
+                <div className="space-y-2">
+                  <CommunityVenueLocationPreview
+                    latitude={venue.exact_location.latitude}
+                    longitude={venue.exact_location.longitude}
+                    venueName={venue.venue_name}
+                  />
+                  <a
+                    href={buildGoogleMapsUrl(venue.exact_location)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                  >
+                    <MapPin className="h-3 w-3" />
+                    Abrir localização exata no Google Maps
+                  </a>
+                </div>
               )}
 
               {user && user.id === venue.created_by_user_id && (
