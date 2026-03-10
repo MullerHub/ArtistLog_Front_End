@@ -47,3 +47,10 @@ applyTo: vercel.json, next.config.mjs, .env*, DEPLOYMENT.md, VERCEL_DEPLOY.md
 
 ## Nota
 Documentação de banco de dados, handlers backend e segurança foram removidos para manter este chat 100% frontend.
+
+## Política de Branch (Obrigatória)
+
+- Branch padrão de desenvolvimento: `development`
+- Novas tarefas devem partir de `development` (ex.: `feature/*`, `fix/*`)
+- Não trabalhar direto em `main` durante implementação
+- Deploy de produção (Vercel) somente quando a entrega estiver validada e pronta para merge em `main`

@@ -132,6 +132,12 @@ Ver: `.github/instructions/contracts.instructions.md` para detalhes
 
 ## Deploy e Produção
 
+### Workflow de Branches (Obrigatório)
+- Desenvolvimento diário: `development`
+- Features/correções: criar branch a partir de `development` (`feature/*`, `fix/*`)
+- `main` fica reservado para release estável e deploy de produção
+- Só promover para `main` quando a entrega estiver validada (tests + revisão)
+
 ### Status: ✅ Ativo em Produção (Vercel)
 - Frontend: `https://artist-log-front-end.vercel.app` (Vercel)
 - Backend: `https://artistlog-backend-latest.onrender.com` (Render)

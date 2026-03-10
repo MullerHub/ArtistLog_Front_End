@@ -79,9 +79,16 @@ vercel --prod
 
 ### Automatic Deploys
 
-- **Production**: Push to `main` branch
-- **Preview**: Every PR creates preview deployment
-- **Branch Deploys**: All branches get preview URLs
+- **Development flow**: trabalhar em `development` e branches derivadas (`feature/*`, `fix/*`)
+- **Production**: apenas merge aprovado para `main`
+- **Preview**: PRs geram preview deployment para validação
+
+### Branch Policy (Team)
+
+1. Base de trabalho: `development`
+2. Implementação: `feature/*` ou `fix/*` a partir de `development`
+3. Integração: PR para `development`
+4. Release: PR de `development` para `main` apenas quando estiver pronto para produção
 
 ## Pre-Deploy Validation
 
