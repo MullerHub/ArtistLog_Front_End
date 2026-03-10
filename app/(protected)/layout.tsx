@@ -36,12 +36,17 @@ export default function ProtectedLayout({
   }
 
   return (
-    <div className="flex h-screen">
+    <div className="flex min-h-screen min-h-dvh bg-muted/30">
       <AppSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-screen min-h-dvh flex-1 flex-col overflow-hidden">
         <MobileNav />
-        <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-6 lg:p-8">
-          {children}
+        <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          <div className="mx-auto flex min-h-full w-full flex-col">
+            <div className="flex-1">{children}</div>
+            <footer className="mt-8 border-t border-border/70 px-1 py-4 text-center text-xs text-muted-foreground">
+              ArtistLog • Ambiente de desenvolvimento
+            </footer>
+          </div>
         </main>
       </div>
     </div>

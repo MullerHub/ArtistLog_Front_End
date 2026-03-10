@@ -93,6 +93,11 @@
 }
 
 @layer base {
+  html,
+  body {
+    min-height: 100%;
+  }
+
   * {
     @apply border-border;
   }
