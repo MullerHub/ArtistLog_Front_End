@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api-client"
+import { ApiError, apiClient } from "@/lib/api-client"
 import { mergeArtistTagFields } from "@/lib/services/artist-tags"
 import type {
   ArtistFilters,
@@ -76,10 +76,32 @@ export const artistsService = {
   async getAll(filters?: ArtistFilters): Promise<ArtistListResponse> {
     const normalizedFilters = normalizeArtistFilterParams(filters)
 
-    const response = await apiClient.get<ArtistListResponse | ArtistResponse[]>(
-      "/artists",
-      normalizedFilters
+    const hasTagLikeFilters = Boolean(
+      filters?.tags || filters?.genres || filters?.event_types
     )
+
+    const requestArtists = (params?: Record<string, unknown>) =>
+      apiClient.get<ArtistListResponse | ArtistResponse[]>("/artists", params)
+
+    let response: ArtistListResponse | ArtistResponse[]
+
+    try {
+      response = await requestArtists(normalizedFilters)
+    } catch (err) {
+      // Some backend environments reject tag/genre/event_type list query params.
+      // Retry without these params and let the UI apply client-side filtering.
+      if (hasTagLikeFilters && err instanceof ApiError && err.status >= 400) {
+        const fallbackParams = {
+          q: filters?.q,
+          available: filters?.available,
+          limit: filters?.limit,
+          offset: filters?.offset,
+        }
+        response = await requestArtists(fallbackParams)
+      } else {
+        throw err
+      }
+    }
 
     if (Array.isArray(response)) {
       return {
