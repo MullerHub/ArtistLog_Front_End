@@ -87,6 +87,27 @@ function removeToken(): void {
   localStorage.removeItem("artistlog_user")
 }
 
+function mapNetworkError(endpoint: string, url: string, err: unknown): ApiError | null {
+  if (!(err instanceof TypeError)) {
+    return null
+  }
+
+  const localhostTarget = isLocalUrl(url)
+  if (localhostTarget) {
+    return new ApiError(
+      `Nao foi possivel conectar ao servidor local (${url}). Verifique se o backend esta ativo e se o CORS permite a origem do frontend. Endpoint: ${endpoint}`,
+      0,
+      { endpoint, url, cause: err.message }
+    )
+  }
+
+  return new ApiError(
+    `Falha de rede ao acessar a API (${endpoint}). Verifique conexao, URL da API e configuracao de CORS.`,
+    0,
+    { endpoint, url, cause: err.message }
+  )
+}
+
 async function request<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -138,6 +159,8 @@ async function request<T>(
     return data as T
   } catch (err) {
     if (err instanceof ApiError) throw err
+    const networkError = mapNetworkError(endpoint, url, err)
+    if (networkError) throw networkError
     console.error("[API Exception]", endpoint, err)
     throw err
   }
@@ -162,10 +185,18 @@ async function requestFormData<T>(
       body: formData,
     })
 
+    if (response.status === 401) {
+      removeToken()
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login"
+      }
+      throw new ApiError("Unauthorized", 401)
+    }
+
     if (!response.ok) {
       const data = await parseResponseBody(response, endpoint)
       throw new ApiError(
-        (data as any)?.message || (typeof data === "string" && data) || "Upload failed",
+        (data as any)?.message || (data as any)?.description || (typeof data === "string" && data) || "Upload failed",
         response.status,
         data
       )
@@ -174,6 +205,48 @@ async function requestFormData<T>(
     return response.json()
   } catch (err) {
     console.error("Erro na requisição (FormData):", err)
+    throw err
+  }
+}
+
+async function requestBlob(endpoint: string): Promise<Blob> {
+  const url = `${API_BASE_URL}${endpoint}`
+  const token = getToken()
+
+  const headers: HeadersInit = {}
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`
+  }
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    })
+
+    if (response.status === 401) {
+      removeToken()
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login"
+      }
+      throw new ApiError("Unauthorized", 401)
+    }
+
+    if (!response.ok) {
+      const data = await parseResponseBody(response, endpoint)
+      throw new ApiError(
+        (data as any)?.message || (data as any)?.description || "Download failed",
+        response.status,
+        data
+      )
+    }
+
+    return response.blob()
+  } catch (err) {
+    if (err instanceof ApiError) throw err
+    const networkError = mapNetworkError(endpoint, url, err)
+    if (networkError) throw networkError
+    console.error("[API Blob Exception]", endpoint, err)
     throw err
   }
 }
@@ -217,6 +290,8 @@ async function requestPublic<T>(
     return data as T
   } catch (err) {
     if (err instanceof ApiError) throw err
+    const networkError = mapNetworkError(endpoint, url, err)
+    if (networkError) throw networkError
     console.error("[API Exception]", endpoint, err)
     throw err
   }
@@ -308,6 +383,8 @@ export const apiClient = {
 
   upload: <T>(endpoint: string, formData: FormData) =>
     requestFormData<T>(endpoint, formData),
+
+  download: (endpoint: string) => requestBlob(endpoint),
 
   // Para endpoints não-críticos (como view tracking) que não devem logout em 401
   postSilent: <T>(endpoint: string, body?: unknown) =>
