@@ -300,6 +300,7 @@ export default function ArtistsPage() {
           )}
         </div>
       </div>
+
     </div>
   )
 }
