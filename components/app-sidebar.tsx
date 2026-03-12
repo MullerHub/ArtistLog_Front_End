@@ -3,7 +3,7 @@
 import React from "react"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Music,
   LayoutDashboard,
@@ -13,7 +13,6 @@ import {
   Star,
   LogOut,
   Settings,
-  FileText,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
@@ -42,11 +41,17 @@ const navItems: NavItem[] = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { user, logout } = useAuth()
 
   const filteredItems = navItems.filter(
     (item) => !item.roles || (user?.role && item.roles.includes(user.role))
   )
+
+  React.useEffect(() => {
+    // Warm the route cache for primary nav targets to make transitions feel instant.
+    filteredItems.forEach((item) => router.prefetch(item.href))
+  }, [filteredItems, router])
 
   return (
     <aside className="hidden w-64 flex-col border-r border-sidebar-border text-white dark:text-sidebar-foreground bg-gradient-to-b from-[hsl(272,48%,46%)] to-[hsl(272,40%,36%)] dark:from-[hsl(223,47%,10%)] dark:to-[hsl(223,47%,10%)] lg:flex">
@@ -68,6 +73,7 @@ export function AppSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onMouseEnter={() => router.prefetch(item.href)}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
@@ -88,10 +94,10 @@ export function AppSidebar() {
         {user && (
           <div className="flex items-center gap-3 rounded-lg bg-white/10 px-3 py-2 dark:bg-muted">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white dark:bg-primary dark:text-primary-foreground">
-              {user.email.charAt(0).toUpperCase()}
+              {(user.email?.charAt(0) || "U").toUpperCase()}
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm font-medium text-white dark:text-foreground">{user.email}</p>
+              <p className="truncate text-sm font-medium text-white dark:text-foreground">{user.email || "usuario@artistlog"}</p>
               <p className="text-xs text-white/60 capitalize dark:text-muted-foreground">{user.role.toLowerCase()}</p>
             </div>
           </div>
