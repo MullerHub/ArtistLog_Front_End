@@ -9,6 +9,7 @@ interface WebSocketMessage {
 export function useWebSocket() {
   const auth = useAuth()
   const token = auth?.user?.id
+  const isWebSocketEnabled = process.env.NEXT_PUBLIC_ENABLE_WEBSOCKET !== "false"
   const [isConnected, setIsConnected] = useState(false)
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
@@ -16,7 +17,9 @@ export function useWebSocket() {
   const reconnectAttemptsRef = useRef(0)
 
   const connect = useCallback(() => {
-    if (!token) {
+    const isAutomation = typeof navigator !== "undefined" && navigator.webdriver
+
+    if (!token || !isWebSocketEnabled || isAutomation) {
       return
     }
 
@@ -50,7 +53,8 @@ export function useWebSocket() {
       }
 
       ws.onerror = (error) => {
-        console.error("[WebSocket] Error:", error)
+        // Connection failures are expected when WS backend is unavailable in local/dev.
+        console.warn("[WebSocket] Connection error")
       }
 
       ws.onclose = () => {
@@ -77,9 +81,9 @@ export function useWebSocket() {
 
       wsRef.current = ws
     } catch (error) {
-      console.error("[WebSocket] Connection error:", error)
+      console.warn("[WebSocket] Failed to initialize connection")
     }
-  }, [token])
+  }, [token, isWebSocketEnabled])
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
