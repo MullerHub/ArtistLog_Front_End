@@ -96,19 +96,19 @@ function LocationInfo({ artist, userLocation }: LocationInfoProps) {
   }
 
   return (
-    <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-      <span className="flex items-center gap-1">
+    <div className="flex min-w-0 flex-col gap-1 text-xs text-muted-foreground">
+      <span className="flex min-w-0 items-start gap-1">
         <MapPin className="h-3 w-3" />
-        Residência: {formatPoint(baseLocation, baseCity)}
+        <span className="min-w-0 break-words">Residencia: {formatPoint(baseLocation, baseCity)}</span>
       </span>
-      <span className="flex items-center gap-1">
+      <span className="flex min-w-0 items-start gap-1">
         <MapPin className="h-3 w-3" />
-        Disponível em: {formatPoint(currentLocation, currentCity)}
+        <span className="min-w-0 break-words">Disponivel em: {formatPoint(currentLocation, currentCity)}</span>
       </span>
       {distanceText && (
-        <span className="flex items-center gap-1">
+        <span className="flex min-w-0 items-start gap-1">
           <MapPin className="h-3 w-3" />
-          Distancia: {distanceText}
+          <span className="min-w-0 break-words">Distancia: {distanceText}</span>
         </span>
       )}
     </div>
@@ -143,8 +143,8 @@ export function ArtistCard({ artist, userLocation = null }: ArtistCardProps) {
   return (
     <Card className="flex flex-col transition-shadow hover:shadow-md">
       <CardContent className="flex flex-1 flex-col gap-3 p-5">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             {hasPhoto ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -157,14 +157,14 @@ export function ArtistCard({ artist, userLocation = null }: ArtistCardProps) {
                 <Music className="h-6 w-6 text-primary" />
               </div>
             )}
-            <div>
-              <h3 className="font-semibold text-foreground">{artist.stage_name}</h3>
+            <div className="min-w-0">
+              <h3 className="truncate font-semibold text-foreground">{artist.stage_name}</h3>
               <LocationInfo artist={artist} userLocation={userLocation} />
             </div>
           </div>
           <Badge
             variant={artist.is_available ? "default" : "secondary"}
-            className={artist.is_available ? "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]" : ""}
+            className={`shrink-0 whitespace-nowrap ${artist.is_available ? "bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]" : ""}`}
           >
             {artist.is_available ? "Disponivel" : "Indisponivel"}
           </Badge>
