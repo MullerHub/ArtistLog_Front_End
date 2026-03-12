@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { setupRealBackendSession } from './fixtures/real-backend-session'
+import { setupAuthMocks } from './fixtures/setup-mocks'
 
 test.describe('Notifications - E2E', () => {
   test.beforeEach(async ({ page, request }) => {
@@ -10,32 +11,18 @@ test.describe('Notifications - E2E', () => {
     await page.goto('/dashboard')
     await page.waitForLoadState('networkidle')
 
-    // Find the notification bell button
-    const notificationBell = page.locator('button[aria-label*="notification"], button:has(svg[*|href*="bell"])')
-    
-    // Check if bell is visible (in header/sidebar)
-    await expect(page.locator('button').filter({ has: page.locator('svg') })).toBeDefined()
+    const notificationBell = page.locator('[data-testid="notification-bell"]:visible').first()
+    await expect(notificationBell).toBeVisible({ timeout: 5000 })
   })
 
   test('should open notification dropdown when clicking bell', async ({ page }) => {
     await page.goto('/dashboard')
     await page.waitForLoadState('networkidle')
 
-    // Click notification bell
-    const bellButton = page.locator('button').filter({ 
-      has: page.locator('svg') 
-    }).first()
-    
+    const bellButton = page.locator('[data-testid="notification-bell"]:visible').first()
     await bellButton.click()
 
-    // Check dropdown content appears
-    // The notification dropdown should show either:
-    // 1. List of notifications
-    // 2. "No notifications" message
-    const dropdownContent = page.locator('[role="dialog"], [role="menu"]').first()
-    
-    // Wait a bit for dropdown to appear
-    await page.waitForTimeout(500)
+    await expect(bellButton).toHaveAttribute('aria-expanded', 'true', { timeout: 5000 })
   })
 
   test('should mark notification as read', async ({ page, request }) => {
@@ -68,18 +55,8 @@ test.describe('Notifications - E2E', () => {
     await page.goto('/dashboard')
     await page.waitForLoadState('networkidle')
 
-    // Check for badge showing count
-    const badge = page.locator('[role="status"]').filter({ 
-      has: page.locator('text=/[0-9]+|99+/')
-    }).first()
-
-    // Badge may or may not be visible depending on unread count
-    // Just verify the element structure is correct
-    const bellContainer = page.locator('button').filter({
-      has: page.locator('svg')
-    }).first()
-
-    await expect(bellContainer).toBeDefined()
+    const bellContainer = page.locator('[data-testid="notification-bell"]:visible').first()
+    await expect(bellContainer).toBeVisible({ timeout: 5000 })
   })
 
   test('should navigate to notifications page from sidebar/menu', async ({ page }) => {
@@ -106,11 +83,7 @@ test.describe('Notifications - E2E', () => {
     await page.goto('/dashboard')
     await page.waitForLoadState('networkidle')
 
-    // Click notification bell to open dropdown
-    const bellButton = page.locator('button').filter({ 
-      has: page.locator('svg') 
-    }).first()
-    
+    const bellButton = page.locator('[data-testid="notification-bell"]:visible').first()
     await bellButton.click()
     await page.waitForTimeout(500)
 
@@ -130,7 +103,6 @@ test.describe('Notifications - E2E', () => {
   })
 
   test('should show loading state while fetching notifications', async ({ page }) => {
-    // Intercept the notifications endpoint to delay response
     await page.route('**/notifications', route => {
       setTimeout(() => route.continue(), 1000)
     })
@@ -138,10 +110,7 @@ test.describe('Notifications - E2E', () => {
     await page.goto('/dashboard')
     await page.waitForLoadState('networkidle')
 
-    const bellButton = page.locator('button').filter({ 
-      has: page.locator('svg') 
-    }).first()
-    
+    const bellButton = page.locator('[data-testid="notification-bell"]:visible').first()
     await bellButton.click()
 
     // Look for loading spinner
@@ -150,5 +119,81 @@ test.describe('Notifications - E2E', () => {
     // Loading state may be quick, just verify no errors occur
     await page.waitForTimeout(100)
     expect(await page.locator('body').isVisible()).toBeTruthy()
+  })
+})
+
+test.describe('Notifications - Routing', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupAuthMocks(page)
+
+    // Keep protected routes stable in local mode by avoiding unexpected 401s
+    // from unrelated dashboard requests.
+    await page.route(/http:\/\/(localhost|127\.0\.0\.1):8080\/(?!notifications|auth\/me).*$/, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({}),
+      })
+    })
+  })
+
+  test('should redirect to venue details when clicking community venue notification', async ({ page }) => {
+    await page.route('**/notifications/unread-count**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ count: 1 }),
+      })
+    })
+
+    await page.route('**/notifications**', async (route) => {
+      const url = route.request().url()
+      const method = route.request().method()
+
+      if (method === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([
+            {
+              id: 'notification-community-1',
+              user_id: 'user-1',
+              type: 'community_venue_created',
+              title: 'Nova venue criada',
+              message: 'Clique para abrir a venue criada',
+              related_entity_id: 'venue-123',
+              related_entity_type: 'community_venue',
+              is_read: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ]),
+        })
+        return
+      }
+
+      if (method === 'PATCH' && /\/notifications\/[^/]+\/read(?:\?.*)?$/.test(url)) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'ok' }),
+        })
+        return
+      }
+
+      await route.continue()
+    })
+
+    await page.goto('/artists')
+    await page.waitForLoadState('networkidle')
+
+    const bellButton = page.locator('[data-testid="notification-bell"]:visible').first()
+    await bellButton.click()
+
+    const item = page.locator('[data-testid="notification-item"]').first()
+    await expect(item).toBeVisible({ timeout: 5000 })
+    await item.click()
+
+    await expect(page).toHaveURL(/\/venues\/venue-123$/)
   })
 })
