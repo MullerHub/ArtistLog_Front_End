@@ -4,7 +4,7 @@ import React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Music,
   LayoutDashboard,
@@ -14,9 +14,7 @@ import {
   Star,
   LogOut,
   Menu,
-  X,
   Settings,
-  FileText,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
@@ -46,11 +44,16 @@ const navItems: NavItem[] = [
 export function MobileNav() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
   const { user, logout } = useAuth()
 
   const filteredItems = navItems.filter(
     (item) => !item.roles || (user?.role && item.roles.includes(user.role))
   )
+
+  React.useEffect(() => {
+    filteredItems.forEach((item) => router.prefetch(item.href))
+  }, [filteredItems, router])
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4 lg:hidden">
@@ -76,6 +79,8 @@ export function MobileNav() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
+                  onTouchStart={() => router.prefetch(item.href)}
+                  onMouseEnter={() => router.prefetch(item.href)}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                     isActive
@@ -94,10 +99,10 @@ export function MobileNav() {
             {user && (
               <div className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                  {user.email.charAt(0).toUpperCase()}
+                  {(user.email?.charAt(0) || "U").toUpperCase()}
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <p className="truncate text-sm font-medium text-foreground">{user.email}</p>
+                  <p className="truncate text-sm font-medium text-foreground">{user.email || "usuario@artistlog"}</p>
                   <p className="text-xs text-muted-foreground capitalize">{user.role.toLowerCase()}</p>
                 </div>
               </div>
