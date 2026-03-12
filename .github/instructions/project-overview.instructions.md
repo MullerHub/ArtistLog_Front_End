@@ -90,9 +90,9 @@ Autenticado:
 
 ## UX Areas Ativas
 
-- Community Venues: criação, busca e claim
+- Community Venues: criação, busca, claim e navegação para detalhe da venue criada
 - Contract Proposal: detalhes adicionais e tags
-- Notification Center: leitura e preferências
+- Notification Center: leitura, preferências e redirecionamento por entidade/tipo
 - Contracts Workspace: tabs de Detalhes, Propostas, Chat, Auditoria e Assinatura
 - Artist/Venue Location: base location + exact location (map + persistência)
 
@@ -129,6 +129,10 @@ Ver: `.github/instructions/contracts.instructions.md` para detalhes
   - `contracts-real.spec.ts` (backend real com dados seed/mockados no backend)
 - Para mobile, os testes devem usar seletores estáveis (`data-testid`) em vez de labels visíveis.
 - Cache de sessão E2E implementado em arquivo temporário para evitar rate limit do backend
+- Notificações agora têm resolução centralizada de destino em `lib/notification-routing.ts`
+- Clique em notificação deve priorizar `action_url`, depois `related_entity_*`, depois fallback por tipo
+- Caso atual prioritário: `community_venue_created` deve levar para `/venues/{id}` quando houver `related_entity_id`
+- O frontend já possui tipos planejados para roadmap de notificações, mesmo quando o backend ainda não os emite
 
 ## Deploy e Produção
 
@@ -137,6 +141,7 @@ Ver: `.github/instructions/contracts.instructions.md` para detalhes
 - Features/correções: criar branch a partir de `development` (`feature/*`, `fix/*`)
 - `main` fica reservado para release estável e deploy de produção
 - Só promover para `main` quando a entrega estiver validada (tests + revisão)
+- Estado atual do trabalho: continuar implementando e validando em `development`; promoção futura para `main` somente quando a entrega frontend estiver pronta para produção e integrada ao backend no Render
 
 ### Modo Desenvolvimento Local (Obrigatório durante implementação)
 - Frontend local: `npm run dev`
@@ -150,6 +155,7 @@ Ver: `.github/instructions/contracts.instructions.md` para detalhes
 - Build validado: `npm run build` funciona
 - Configuração: `vercel.json` com headers de segurança
 - API conectada: ✅ CORS corrigido (single origin)
+- TypeScript sem supressão de erros: `npm run type-check` e `npm run build` devem permanecer verdes antes de promover para `main`
 
 ### API Base URL Resolution
 `lib/api-client.ts` implementa fallback inteligente:
@@ -171,7 +177,6 @@ NEXT_PUBLIC_API_URL=https://artistlog-backend-latest.onrender.com
 
 ### Docs de Deploy
 - **Deployment:** `.github/instructions/deployment.instructions.md`
-- **CORS Setup:** `CORS_ISSUE.md` (diagnóstico e solução)
 - **API Health:** `/debug/health` (verificar conectividade no frontend)
 
 ## Próximas Features (Contexto para Desenvolvimento)
