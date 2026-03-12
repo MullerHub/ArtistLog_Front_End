@@ -41,7 +41,7 @@ function isPortAvailable(port) {
     })
     
     try {
-      server.listen(port, '127.0.0.1')
+      server.listen(port)
     } catch (e) {
       resolve(false)
     }
