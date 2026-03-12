@@ -101,10 +101,12 @@ Implementado em `lib/api-client.ts` > `resolveApiBaseUrl()`:
 - `GET /contracts/{contractId}/audit/logs`
 - `GET /contracts/audit/user`
 
-### Contracts (Signature)
-- `POST /contracts/send-for-signature`
-- `GET /contracts/{contractId}/signature-status`
-- `POST /webhooks/signature-completed` (webhook externo, não chamado diretamente no frontend)
+### Contracts (Templates Locais)
+- `POST /contracts/templates` (multipart/form-data: `file`, `template_name`, `description`)
+- `GET /contracts/templates/my` (query opcional: `include_inactive=true`)
+- `GET /contracts/{id}/template`
+- `POST /contracts/{id}/accept-template`
+- `POST /contracts/{id}/reject-template`
 
 ### Notifications
 - `GET /notifications`
@@ -114,6 +116,13 @@ Implementado em `lib/api-client.ts` > `resolveApiBaseUrl()`:
 - `GET /notifications/preferences`
 - `PATCH /notifications/preferences`
 - `POST /notifications/test`
+
+**Frontend expectation for notification payloads:**
+- Base fields already usados: `id`, `type`, `title`, `message`, `is_read`, `created_at`
+- Navegação contextual deve preferir `action_url` quando o backend enviar
+- Para navegação por entidade, backend pode enviar `related_entity_id` + `related_entity_type`
+- `metadata` opcional é suportado no frontend para futuros casos (`venue_id`, `contract_id`, `artist_id`, etc.)
+- Caso prioritário atual: `community_venue_created` com `related_entity_id` deve abrir `/venues/{id}`
 
 ### Location / City / Upload
 - `GET /cities/search`
