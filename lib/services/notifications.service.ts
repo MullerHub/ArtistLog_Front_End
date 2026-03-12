@@ -8,6 +8,8 @@ export interface Notification {
   message: string
   related_entity_id?: string
   related_entity_type?: string
+  action_url?: string
+  metadata?: Record<string, unknown> | null
   is_read: boolean
   created_at: string
   updated_at: string
@@ -71,7 +73,7 @@ export const notificationsService = {
   },
 
   /**
-   * Send test notification
+   * Send test notification (backend utility endpoint)
    */
   async sendTestNotification(type: string): Promise<{ message: string }> {
     return apiClient.post("/notifications/test", { type })
