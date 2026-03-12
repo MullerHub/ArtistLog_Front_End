@@ -34,6 +34,7 @@ interface ArtistFiltersProps {
   onTagToggle: (tag: string) => void
   onClearFilters: () => void
   onCollapsedChange?: (collapsed: boolean) => void
+  allowCollapse?: boolean
 }
 
 export function ArtistFilters({
@@ -49,6 +50,7 @@ export function ArtistFilters({
   onTagToggle,
   onClearFilters,
   onCollapsedChange,
+  allowCollapse = true,
 }: ArtistFiltersProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const hasFilters = search || genreSearch || eventTypeSearch || availableOnly || selectedTags.length > 0
@@ -63,7 +65,7 @@ export function ArtistFilters({
     onCollapsedChange?.(false)
   }
 
-  if (isCollapsed) {
+  if (allowCollapse && isCollapsed) {
     return (
       <div className="flex items-center justify-center rounded-lg border border-border bg-card p-2">
         <Button
@@ -71,10 +73,10 @@ export function ArtistFilters({
           variant="ghost"
           onClick={handleExpand}
           aria-label="Expandir filtros"
-          className="flex items-center gap-2 px-2 md:px-0"
+          className="flex items-center gap-2 px-2"
         >
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="md:hidden text-xs font-semibold text-foreground">FILTROS</span>
+          <span className="hidden whitespace-nowrap text-xs font-semibold text-foreground sm:inline">FILTROS</span>
         </Button>
       </div>
     )
@@ -84,16 +86,20 @@ export function ArtistFilters({
     <div className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7"
-            onClick={handleCollapse}
-            aria-label="Recolher filtros"
-          >
+          {allowCollapse ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={handleCollapse}
+              aria-label="Recolher filtros"
+            >
+              <Filter className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          ) : (
             <Filter className="h-4 w-4 text-muted-foreground" />
-          </Button>
+          )}
           <h3 className="text-sm font-semibold text-foreground">Filtros</h3>
         </div>
         {hasFilters && (
@@ -153,6 +159,7 @@ export function ArtistFilters({
               key={tag}
               variant={selectedTags.includes(tag) ? "default" : "outline"}
               className="cursor-pointer transition-colors"
+              data-testid={`quick-tag-${tag.toLowerCase().replace(/\s+/g, "-")}`}
               onClick={() => onTagToggle(tag)}
             >
               {tag}
