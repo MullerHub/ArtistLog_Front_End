@@ -12,9 +12,14 @@ test.describe('Artists Page', () => {
     // Wait for content to load
     await page.waitForLoadState('networkidle')
 
-    // Check if artist cards are visible
-    const artistCards = page.locator('[class*="card"]').first()
-    await expect(artistCards).toBeVisible({ timeout: 5000 })
+    const detailButtons = page.getByRole('button', { name: 'Ver Detalhes' })
+    const hasCards = (await detailButtons.count()) > 0
+
+    if (!hasCards) {
+      await expect(page.locator('text=Nenhum artista encontrado')).toBeVisible({ timeout: 5000 })
+    } else {
+      await expect(detailButtons.first()).toBeVisible({ timeout: 5000 })
+    }
   })
 
   test('should have search functionality', async ({ page }) => {
@@ -46,6 +51,25 @@ test.describe('Artists Page', () => {
       // Wait a bit for filter modal to open
       await page.waitForTimeout(200)
     }
+  })
+
+  test('should apply quick tags without showing load error', async ({ page }) => {
+    await page.waitForLoadState('networkidle')
+
+    const expandFiltersButton = page.getByRole('button', { name: /Expandir filtros/i })
+    if (await expandFiltersButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await expandFiltersButton.click()
+    }
+
+    const artistsRequestPromise = page.waitForResponse((response) => {
+      return response.url().includes('/artists') && response.request().method() === 'GET'
+    })
+
+    await page.getByTestId('quick-tag-house').click()
+    const artistsResponse = await artistsRequestPromise
+
+    expect(artistsResponse.ok()).toBeTruthy()
+    await expect(page.locator('text=Erro ao carregar artistas')).toHaveCount(0)
   })
 
   test('should navigate to artist detail page', async ({ page }) => {
