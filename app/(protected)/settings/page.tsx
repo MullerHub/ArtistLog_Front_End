@@ -207,8 +207,10 @@ function ArtistProfileSettings() {
   const [photoUrls, setPhotoUrls] = useState<string[]>([])
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
   const [showErrors, setShowErrors] = useState(false)
-  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false)
-  const [locationUpdatedAt, setLocationUpdatedAt] = useState<string | null>(null)
+  const [eventLatitude, setEventLatitude] = useState<number | null>(null)
+  const [eventLongitude, setEventLongitude] = useState<number | null>(null)
+  const [isUpdatingEventLocation, setIsUpdatingEventLocation] = useState(false)
+  const [eventLocationUpdatedAt, setEventLocationUpdatedAt] = useState<string | null>(null)
 
   // Carregar dados do perfil existente
   const { data: artistData } = useSWR(
@@ -273,6 +275,12 @@ function ArtistProfileSettings() {
           setProfilePhoto(null)
         }
       }
+
+      if (artistData.current_location) {
+        setEventLatitude(artistData.current_location.latitude)
+        setEventLongitude(artistData.current_location.longitude)
+      }
+
       // Preencher campos do formulário
       reset({
         stage_name: artistData.stage_name || "",
@@ -353,7 +361,7 @@ function ArtistProfileSettings() {
     .map((error) => (typeof error?.message === "string" ? error.message : null))
     .filter((message): message is string => Boolean(message))
 
-  const handleUpdateLocation = () => {
+  const handleUseCurrentEventLocation = () => {
     if (!user) return
 
     if (!navigator.geolocation) {
@@ -361,34 +369,69 @@ function ArtistProfileSettings() {
       return
     }
 
-    setIsUpdatingLocation(true)
+    setIsUpdatingEventLocation(true)
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const response = await artistsService.updateLocation(user.id, {
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-          })
-          setLocationUpdatedAt(response.updated_at)
-          toast.success("Localizacao atualizada com sucesso")
-          
-          // Revalidate all SWR caches to refresh artist data
-          mutate((key) => Array.isArray(key) && key[0] === 'artists')
-          mutate(['artist-profile', user.id])
-          router.refresh()
-        } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : "Erro ao atualizar localizacao"
-          toast.error(message)
-        } finally {
-          setIsUpdatingLocation(false)
-        }
+      (pos) => {
+        setEventLatitude(pos.coords.latitude)
+        setEventLongitude(pos.coords.longitude)
+        toast.success("Coordenadas de próximos eventos capturadas")
+        setIsUpdatingEventLocation(false)
       },
       () => {
         toast.error("Nao foi possivel obter sua localizacao")
-        setIsUpdatingLocation(false)
+        setIsUpdatingEventLocation(false)
       },
       { enableHighAccuracy: true, timeout: 10000 }
     )
+  }
+
+  const handleUseArtistBaseLocation = () => {
+    if (!artistData?.base_location) {
+      toast.error("Defina sua localizacao base primeiro")
+      return
+    }
+
+    setEventLatitude(artistData.base_location.latitude)
+    setEventLongitude(artistData.base_location.longitude)
+    toast.success("Localizacao base aplicada para proximos eventos")
+  }
+
+  const handleSaveUpcomingEventLocation = async () => {
+    if (!user) return
+
+    if (eventLatitude === null || eventLongitude === null) {
+      toast.error("Defina latitude e longitude para salvar")
+      return
+    }
+
+    if (eventLatitude < -90 || eventLatitude > 90) {
+      toast.error("Latitude deve estar entre -90 e 90")
+      return
+    }
+
+    if (eventLongitude < -180 || eventLongitude > 180) {
+      toast.error("Longitude deve estar entre -180 e 180")
+      return
+    }
+
+    setIsUpdatingEventLocation(true)
+    try {
+      const response = await artistsService.updateLocation(user.id, {
+        latitude: eventLatitude,
+        longitude: eventLongitude,
+      })
+      setEventLocationUpdatedAt(response.updated_at)
+      toast.success("Localização de próximos eventos atualizada")
+
+      mutate((key) => Array.isArray(key) && key[0] === 'artists')
+      mutate(['artist-profile', user.id])
+      router.refresh()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao atualizar localização"
+      toast.error(message)
+    } finally {
+      setIsUpdatingEventLocation(false)
+    }
   }
 
   return (
@@ -574,26 +617,39 @@ function ArtistProfileSettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <MapPin className="h-5 w-5 text-primary" />
-            Localizacao Atual
+            Localização de Próximos Eventos
           </CardTitle>
           <CardDescription>
-            Atualize sua localizacao para aparecer em buscas por proximidade.
+            Defina no mapa onde você pretende tocar nos próximos eventos para melhorar o matching por proximidade.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          <Button type="button" variant="outline" onClick={handleUpdateLocation} disabled={isUpdatingLocation}>
-            {isUpdatingLocation ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Atualizando...
-              </>
-            ) : (
-              "Atualizar localizacao atual"
-            )}
-          </Button>
-          {locationUpdatedAt && (
+          <ExactLocationManager
+            latitude={eventLatitude}
+            longitude={eventLongitude}
+            baseLatitude={artistData?.base_location?.latitude ?? null}
+            baseLongitude={artistData?.base_location?.longitude ?? null}
+            cityName={artistData?.city}
+            stateName={artistData?.state}
+            isUpdating={isUpdatingEventLocation}
+            onLatitudeChange={setEventLatitude}
+            onLongitudeChange={setEventLongitude}
+            onUseCurrentLocation={handleUseCurrentEventLocation}
+            onUseBaseLocation={handleUseArtistBaseLocation}
+            onSave={handleSaveUpcomingEventLocation}
+            title="Localização de Próximos Eventos"
+            description="Use o mapa para definir sua área atual de atuação e facilitar convites próximos à sua agenda."
+            baseLocationButtonLabel="Usar Localização base da cidade do artista"
+            currentLocationButtonLabel="Usar minha localização atual"
+            saveButtonLabel="Salvar localização de próximos eventos"
+            saveButtonLoadingLabel="Salvando localização..."
+            coordinatesLabelPrefix="Próximos eventos"
+            historyLabel="Últimas localizações de eventos"
+            historyStorageKey="artist_event_location_history"
+          />
+          {eventLocationUpdatedAt && (
             <p className="text-xs text-muted-foreground">
-              Atualizada em {formatDate(locationUpdatedAt)}
+              Atualizada em {formatDate(eventLocationUpdatedAt)}
             </p>
           )}
         </CardContent>
