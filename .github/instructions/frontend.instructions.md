@@ -43,3 +43,6 @@ applyTo: 'app/**,components/**,lib/**,hooks/**,styles/**'
 - Use App Router conventions
 - Place protected pages under `app/(protected)`
 - Use `AuthProvider` for auth state and guard logic
+- Notification clicks must use centralized route resolution instead of hardcoded component-specific logic
+- Prefer entity-first routing for notifications: `action_url` -> `related_entity_id`/`related_entity_type` -> fallback by notification type
+- For community venue creation notifications, route to the created venue detail when an entity id is available
