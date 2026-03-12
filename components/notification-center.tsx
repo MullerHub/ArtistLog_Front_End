@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Bell } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Bell, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -11,22 +12,14 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useWebSocket } from "@/hooks/use-websocket"
+import { getNotificationIcon, isNotificationNavigable, resolveNotificationHref } from "@/lib/notification-routing"
 import { notificationsService } from "@/lib/services/notifications.service"
+import type { Notification } from "@/lib/services/notifications.service"
 import { formatDistanceToNow } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
-interface Notification {
-  id: string
-  type: string
-  title: string
-  message: string
-  is_read: boolean
-  created_at: string
-  related_entity_id?: string
-  related_entity_type?: string
-}
-
 export function NotificationCenter() {
+  const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
@@ -42,9 +35,10 @@ export function NotificationCenter() {
     setIsLoading(true)
     try {
       const data = await notificationsService.getNotifications({ limit: 20, offset: 0 })
-      setNotifications(data)
+      setNotifications(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error("Error loading notifications:", error)
+      setNotifications([])
     } finally {
       setIsLoading(false)
     }
@@ -104,6 +98,16 @@ export function NotificationCenter() {
     }
   }
 
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.is_read) {
+      await handleMarkAsRead(notification.id)
+    }
+
+    const href = resolveNotificationHref(notification)
+    setIsOpen(false)
+    router.push(href)
+  }
+
   const handleMarkAllAsRead = async () => {
     try {
       await notificationsService.markAllAsRead()
@@ -116,34 +120,22 @@ export function NotificationCenter() {
     }
   }
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case "contract_received":
-        return "📝"
-      case "contract_accepted":
-        return "✅"
-      case "contract_rejected":
-        return "❌"
-      case "contract_completed":
-        return "🎉"
-      case "review_received":
-        return "⭐"
-      case "community_venue_claimed":
-        return "🏢"
-      default:
-        return "🔔"
-    }
-  }
-
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          aria-label="Abrir notificações"
+          data-testid="notification-bell"
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+              className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs"
+              data-testid="notification-badge"
             >
               {unreadCount > 99 ? "99+" : unreadCount}
             </Badge>
@@ -153,9 +145,9 @@ export function NotificationCenter() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-96">
+      <DropdownMenuContent align="end" className="w-96" data-testid="notification-dropdown">
         <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">Notificações</h3>
+          <h3 className="font-semibold" data-testid="notification-dropdown-title">Notificações</h3>
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllAsRead}
@@ -181,13 +173,8 @@ export function NotificationCenter() {
               {notifications.map((notification) => (
                 <button
                   key={notification.id}
-                  onClick={() => {
-                    if (!notification.is_read) {
-                      handleMarkAsRead(notification.id)
-                    }
-                    // TODO: Navigate to related entity
-                    setIsOpen(false)
-                  }}
+                  onClick={() => void handleNotificationClick(notification)}
+                  data-testid="notification-item"
                   className={`w-full text-left p-4 hover:bg-muted/50 transition-colors ${
                     !notification.is_read ? "bg-muted/30" : ""
                   }`}
@@ -206,12 +193,20 @@ export function NotificationCenter() {
                       <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                         {notification.message}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {formatDistanceToNow(new Date(notification.created_at), {
-                          addSuffix: true,
-                          locale: ptBR,
-                        })}
-                      </p>
+                      <div className="mt-2 flex items-center justify-between gap-3">
+                        <p className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(notification.created_at), {
+                            addSuffix: true,
+                            locale: ptBR,
+                          })}
+                        </p>
+                        {isNotificationNavigable(notification) && (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+                            Abrir
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </button>
