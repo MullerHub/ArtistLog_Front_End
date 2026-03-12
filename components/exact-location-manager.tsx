@@ -29,6 +29,15 @@ interface ExactLocationManagerProps {
   onUseCurrentLocation: () => void
   onUseBaseLocation: () => void
   onSave: () => void
+  title?: string
+  description?: string
+  baseLocationButtonLabel?: string
+  currentLocationButtonLabel?: string
+  saveButtonLabel?: string
+  saveButtonLoadingLabel?: string
+  coordinatesLabelPrefix?: string
+  historyLabel?: string
+  historyStorageKey?: string
 }
 
 export function ExactLocationManager({
@@ -44,12 +53,21 @@ export function ExactLocationManager({
   onUseCurrentLocation,
   onUseBaseLocation,
   onSave,
+  title = "Localização Exata (ExactLocation)",
+  description = "Selecione visualmente no mapa, busque por endereço ou preencha latitude/longitude manualmente.",
+  baseLocationButtonLabel = "Usar localização base da venue",
+  currentLocationButtonLabel = "Usar minha localização atual",
+  saveButtonLabel = "Salvar localização exata",
+  saveButtonLoadingLabel = "Salvando...",
+  coordinatesLabelPrefix = "ExactLocation",
+  historyLabel = "Últimas localizações",
+  historyStorageKey = "venue_location_history",
 }: ExactLocationManagerProps) {
   const [history, setHistory] = useState<LocationHistoryItem[]>([])
   const [validationError, setValidationError] = useState<string | null>(null)
 
   useEffect(() => {
-    const saved = localStorage.getItem("venue_location_history")
+    const saved = localStorage.getItem(historyStorageKey)
     if (saved) {
       try {
         setHistory(JSON.parse(saved))
@@ -57,7 +75,7 @@ export function ExactLocationManager({
         // Ignore parse errors
       }
     }
-  }, [])
+  }, [historyStorageKey])
 
   const validateCoordinates = (lat: number | null, lon: number | null): string | null => {
     if (lat === null || lon === null) {
@@ -99,7 +117,7 @@ export function ExactLocationManager({
 
       const updatedHistory = [newItem, ...history].slice(0, 5)
       setHistory(updatedHistory)
-      localStorage.setItem("venue_location_history", JSON.stringify(updatedHistory))
+      localStorage.setItem(historyStorageKey, JSON.stringify(updatedHistory))
       console.log('💾 [History] Saved location:', { lat: latitude, lng: longitude })
     }
 
@@ -115,9 +133,9 @@ export function ExactLocationManager({
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
-      <Label className="text-sm font-semibold">Localização Exata (ExactLocation)</Label>
+      <Label className="text-sm font-semibold">{title}</Label>
       <p className="text-xs text-muted-foreground">
-        Selecione visualmente no mapa, busque por endereço ou preencha latitude/longitude manualmente.
+        {description}
       </p>
 
       <ExactLocationSearch
@@ -149,7 +167,7 @@ export function ExactLocationManager({
         <div className="space-y-2">
           <Label className="flex items-center gap-2 text-xs text-muted-foreground">
             <History className="h-3 w-3" />
-            Últimas localizações
+            {historyLabel}
           </Label>
           <div className="flex flex-wrap gap-2">
             {history.map((item, index) => (
@@ -188,19 +206,19 @@ export function ExactLocationManager({
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <Button type="button" variant="outline" onClick={onUseBaseLocation} disabled={isUpdating}>
           <MapPin className="mr-2 h-4 w-4" />
-          Usar localização base da venue
+          {baseLocationButtonLabel}
         </Button>
         <Button type="button" variant="outline" onClick={onUseCurrentLocation} disabled={isUpdating}>
-          Usar minha localização atual
+          {currentLocationButtonLabel}
         </Button>
         <Button type="button" onClick={handleSaveWithHistory} disabled={isUpdating || validationError !== null}>
-          {isUpdating ? "Salvando..." : "Salvar localização exata"}
+          {isUpdating ? saveButtonLoadingLabel : saveButtonLabel}
         </Button>
       </div>
 
       {typeof latitude === 'number' && typeof longitude === 'number' && (
         <p className="text-xs text-muted-foreground">
-          ExactLocation: {latitude.toFixed(6)}, {longitude.toFixed(6)}
+          {coordinatesLabelPrefix}: {latitude.toFixed(6)}, {longitude.toFixed(6)}
         </p>
       )}
     </div>
