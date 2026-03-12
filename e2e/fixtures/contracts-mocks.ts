@@ -10,6 +10,13 @@ export const mockUser = {
   profile_completed: true,
 }
 
+export const mockVenueUser = {
+  id: 'user-venue-1',
+  email: 'venue@example.com',
+  role: 'VENUE',
+  profile_completed: true,
+}
+
 export const mockContract = {
   id: 'contract-1',
   artist_id: 'artist-1',
@@ -17,6 +24,7 @@ export const mockContract = {
   event_date: '2026-03-15',
   final_price: 3500,
   status: 'PENDING',
+  is_deleted: false,
   description: 'Show principal da noite',
   message: 'Chegar 1h antes do evento',
   created_at: new Date().toISOString(),
@@ -70,3 +78,20 @@ export const mockAuditLogs = [
     created_at: new Date().toISOString(),
   },
 ]
+
+export const mockContractTemplate = {
+  id: 'template-1',
+  artist_id: 'artist-1',
+  template_name: 'Contrato Padrao ArtistLog',
+  description: 'Template base para contratacao de apresentacao',
+  file_path: 'contract_templates/contrato-padrao.pdf',
+  file_name: 'contrato-padrao.pdf',
+  file_url: 'https://example.com/templates/contract-template-1.pdf',
+  file_size_bytes: 245760,
+  content_hash: 'sha256mockedhash',
+  mime_type: 'application/pdf',
+  is_active: true,
+  version: 1,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+}
