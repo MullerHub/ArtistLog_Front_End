@@ -327,8 +327,18 @@ export interface Contract {
   venue_id: string
   event_date: string // YYYY-MM-DD
   final_price: number
+  event_time?: string
+  duration_hours?: number
+  equipment_requirements?: string
+  terms?: string
   description?: string
   message?: string
+  signature_document_id?: string
+  signature_url?: string
+  signed_at?: string
+  is_deleted: boolean
+  deleted_at?: string
+  deleted_by?: string
   counter_proposal_price?: number
   counter_proposal_message?: string
   status: ContractStatus
@@ -343,6 +353,10 @@ export interface CreateContractRequest {
   final_price: number
   description?: string
   message?: string
+  event_time?: string
+  duration_hours?: number
+  equipment_requirements?: string
+  terms?: string
 }
 
 export interface UpdateContractStatusRequest {
@@ -357,6 +371,69 @@ export interface ContractListResponse {
   total: number
   limit: number
   offset: number
+}
+
+// ============================================================================
+// CONTRACT TEMPLATE TYPES
+// ============================================================================
+
+export interface ContractTemplate {
+  id: string
+  artist_id: string
+  template_name: string
+  description?: string
+  file_path: string
+  file_size_bytes: number
+  content_hash: string
+  mime_type: string
+  is_active: boolean
+  version: number
+  created_at: string
+  updated_at: string
+  // Compat fields used by legacy UI flows.
+  file_url?: string
+  file_name?: string
+}
+
+export interface UploadContractTemplateRequest {
+  file: File
+  template_name: string
+  description?: string
+}
+
+export interface ContractTemplateListResponse {
+  items: ContractTemplate[]
+}
+
+export interface TemplateAcceptance {
+  id: string
+  contract_id: string
+  template_id: string
+  accepted_by_role: "ARTIST" | "VENUE"
+  accepted_at: string
+  accepted_by_ip?: string
+  acceptance_location?: {
+    latitude: number
+    longitude: number
+  }
+  metadata?: string
+  created_at: string
+}
+
+export interface ContractTemplateDetailResponse {
+  template: ContractTemplate
+  acceptance?: TemplateAcceptance
+}
+
+export interface ContractTemplateDecisionPayload {
+  contract_id?: string
+  template_id: string
+  ip_address?: string
+  metadata?: Record<string, unknown>
+}
+
+export interface RejectTemplateResponse {
+  message: string
 }
 
 // ============================================================================
@@ -463,7 +540,7 @@ export interface UserAuditResponse {
 }
 
 // ============================================================================
-// SIGNATURE DIGITAL TYPES
+// SIGNATURE DIGITAL TYPES (legacy/compat)
 // ============================================================================
 
 export type SignatureStatusType =
