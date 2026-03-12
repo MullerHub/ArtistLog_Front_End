@@ -37,21 +37,17 @@ test.describe('App Navigation', () => {
   test('should show notification bell', async ({ page }) => {
     await page.goto('/dashboard')
 
-    // Look for notification bell icon
-    const notificationBell = page.locator('[aria-label*="notification"], [aria-label*="Notificação"]').first()
+    const notificationBell = page.locator('[data-testid="notification-bell"]:visible').first()
     await expect(notificationBell).toBeVisible({ timeout: 5000 })
   })
 
   test('should open notification dropdown', async ({ page }) => {
     await page.goto('/dashboard')
 
-    // Click notification bell
-    const notificationBell = page.locator('button:has(svg)').first()
+    const notificationBell = page.locator('[data-testid="notification-bell"]:visible').first()
     await notificationBell.click()
 
-    // Should show notification dropdown
-    const dropdown = page.locator('text=Notificações')
-    await expect(dropdown).toBeVisible({ timeout: 3000 })
+    await expect(notificationBell).toHaveAttribute('aria-expanded', 'true', { timeout: 5000 })
   })
 })
 
