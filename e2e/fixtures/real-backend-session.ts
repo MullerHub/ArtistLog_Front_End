@@ -18,41 +18,84 @@ interface CachedSession {
   token: string
   user: unknown
   timestamp: number
+  scope?: string
 }
+
+interface SessionCredentials {
+  email: string
+  password: string
+}
+
+type SessionCacheStore = Record<string, CachedSession>
 
 const CACHE_FILE = path.join(os.tmpdir(), 'artistlog-e2e-session-cache.json')
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
-function loadCachedSession(): CachedSession | null {
+function loadSessionCacheStore(): SessionCacheStore {
   try {
-    if (fs.existsSync(CACHE_FILE)) {
-      const data = fs.readFileSync(CACHE_FILE, 'utf-8')
-      const session = JSON.parse(data) as CachedSession
-      // Check if cache is still valid (within TTL)
-      if (Date.now() - session.timestamp < CACHE_TTL) {
-        return session
-      }
+    if (!fs.existsSync(CACHE_FILE)) {
+      return {}
     }
+
+    const data = fs.readFileSync(CACHE_FILE, 'utf-8')
+    const parsed = JSON.parse(data) as SessionCacheStore | CachedSession
+
+    // Backward compatibility with legacy single-session cache format.
+    if (typeof parsed === 'object' && parsed !== null && 'token' in parsed && 'timestamp' in parsed) {
+      const legacy = parsed as CachedSession
+      const legacyScope = legacy.scope || 'legacy-default'
+      return { [legacyScope]: legacy }
+    }
+
+    return (parsed as SessionCacheStore) || {}
   } catch (error) {
-    console.warn('[E2E] Failed to load cached session:', error)
+    console.warn('[E2E] Failed to load cached session store:', error)
+    return {}
   }
-  return null
 }
 
-function saveCachedSession(session: CachedSession): void {
-  try {
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(session), 'utf-8')
-  } catch (error) {
-    console.warn('[E2E] Failed to save cached session:', error)
+function getCachedSession(scope: string): CachedSession | null {
+  const store = loadSessionCacheStore()
+  const session = store[scope]
+
+  if (!session) {
+    return null
   }
+
+  if (Date.now() - session.timestamp >= CACHE_TTL) {
+    delete store[scope]
+    saveSessionCacheStore(store)
+    return null
+  }
+
+  return session
+}
+
+function saveSessionCacheStore(store: SessionCacheStore): void {
+  try {
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(store), 'utf-8')
+  } catch (error) {
+    console.warn('[E2E] Failed to save cached session store:', error)
+  }
+}
+
+function saveCachedSession(scope: string, session: CachedSession): void {
+  const store = loadSessionCacheStore()
+  store[scope] = session
+  saveSessionCacheStore(store)
 }
 
 export async function setupRealBackendSession(
   page: Page,
-  request: APIRequestContext
+  request: APIRequestContext,
+  credentials?: SessionCredentials
 ): Promise<void> {
-  const cachedSession = loadCachedSession()
-  
+  const targetEmail = credentials?.email || E2E_EMAIL
+  const targetPassword = credentials?.password || E2E_PASSWORD
+  const cacheScopeKey = `${targetEmail.toLowerCase()}::${API_BASE_URL}`
+
+  const cachedSession = getCachedSession(cacheScopeKey)
+
   if (cachedSession) {
     console.log('[E2E] Using cached session from file')
     await page.addInitScript(
@@ -68,8 +111,8 @@ export async function setupRealBackendSession(
   console.log('[E2E] No cached session found, logging in...')
   const loginResponse = await request.post(`${API_BASE_URL}/auth/login`, {
     data: {
-      email: E2E_EMAIL,
-      password: E2E_PASSWORD,
+      email: targetEmail,
+      password: targetPassword,
     },
   })
 
@@ -104,9 +147,10 @@ export async function setupRealBackendSession(
     token: loginData.access_token,
     user,
     timestamp: Date.now(),
+    scope: cacheScopeKey,
   }
-  
-  saveCachedSession(session)
+
+  saveCachedSession(cacheScopeKey, session)
 
   await page.addInitScript(
     ({ token, currentUser }) => {
