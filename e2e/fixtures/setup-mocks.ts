@@ -1,30 +1,84 @@
 import { Page, Route } from '@playwright/test'
-import { mockUser, mockContract, mockProposals, mockMessages, mockAuditLogs } from './contracts-mocks'
+import {
+  mockUser,
+  mockVenueUser,
+  mockContract,
+  mockProposals,
+  mockMessages,
+  mockAuditLogs,
+  mockContractTemplate,
+} from './contracts-mocks'
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.E2E_API_URL || 'http://127.0.0.1:8080'
+
+function buildApiRoutePattern(pathname: string): RegExp {
+  const escapedBase = API_BASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`^${escapedBase}${pathname}(?:\\?.*)?$`)
+}
+
+async function setupNotificationMocks(page: Page) {
+  await page.route(/\/notifications\/unread-count(?:\?.*)?$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ count: 0 }),
+    })
+  })
+
+  await page.route(/\/notifications(?:\?.*)?$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([]),
+    })
+  })
+
+  await page.route(/\/notifications\/read-all(?:\?.*)?$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'ok' }),
+    })
+  })
+
+  await page.route(/\/notifications\/[^/]+\/read(?:\?.*)?$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'ok' }),
+    })
+  })
+}
 
 /**
  * Configura mocks completos de API para testes de contratos
  * Todos os dados são simulados - não depende de backend real
  */
-export async function setupContractsMocks(page: Page) {
-  const API_BASE = 'http://localhost:8080'
-  
+export async function setupContractsMocks(page: Page, options?: { role?: 'ARTIST' | 'VENUE' }) {
+  await setupNotificationMocks(page)
+
   // Estado mutável para simular mudanças durante os testes
   let contracts = [mockContract]
   let proposals = [...mockProposals]
   let messages = [...mockMessages]
+  let templates = [{ ...mockContractTemplate }]
+  let acceptance: Record<string, unknown> | undefined
+
+  const role = options?.role === 'VENUE' ? 'VENUE' : 'ARTIST'
+  const currentUser = role === 'VENUE' ? mockVenueUser : mockUser
 
   // Intercepta autenticação
-  await page.route(`${API_BASE}/auth/me`, async (route) => {
+  await page.route(/http:\/\/(localhost|127\.0\.0\.1):8080\/auth\/me(?:\?.*)?$/, async (route) => {
     console.log('✅ [MOCK] Intercepted: GET /auth/me')
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(mockUser),
+      body: JSON.stringify(currentUser),
     })
   })
 
   // Intercepta todas as rotas de contratos
-  await page.route(`${API_BASE}/contracts**`, async (route: Route) => {
+  await page.route(/http:\/\/(localhost|127\.0\.0\.1):8080\/contracts(?:\/.*)?(?:\?.*)?$/, async (route: Route) => {
     const request = route.request()
     const url = request.url()
     const urlObj = new URL(url)
@@ -45,6 +99,115 @@ export async function setupContractsMocks(page: Page) {
           limit: 50,
           offset: 0,
         }),
+      })
+    }
+
+    // POST /contracts - Criar contrato
+    if (method === 'POST' && pathname === '/contracts') {
+      const body = request.postDataJSON() as Record<string, unknown>
+      const newContract = {
+        ...mockContract,
+        id: `contract-${contracts.length + 1}`,
+        artist_id: String(body.artist_id || mockContract.artist_id),
+        venue_id: String(body.venue_id || mockContract.venue_id),
+        event_date: String(body.event_date || mockContract.event_date),
+        final_price: Number(body.final_price || mockContract.final_price),
+        description: (body.description as string) || mockContract.description,
+        message: (body.message as string) || mockContract.message,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      contracts = [newContract, ...contracts]
+      return route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify(newContract),
+      })
+    }
+
+    // GET /contracts/templates/my
+    if (method === 'GET' && pathname === '/contracts/templates/my') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(templates),
+      })
+    }
+
+    // POST /contracts/templates
+    if (method === 'POST' && pathname === '/contracts/templates') {
+      const newTemplate = {
+        ...mockContractTemplate,
+        id: `template-${templates.length + 1}`,
+        template_name: `Template ${templates.length + 1}`,
+        file_path: `contract_templates/template-${templates.length + 1}.pdf`,
+        file_name: `template-${templates.length + 1}.pdf`,
+        file_size_bytes: 120000,
+        content_hash: `sha256-template-${templates.length + 1}`,
+        version: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      templates = [newTemplate, ...templates]
+
+      return route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify(newTemplate),
+      })
+    }
+
+    // GET /contracts/templates/{template_id}/download
+    if (method === 'GET' && /^\/contracts\/templates\/[^/]+\/download$/.test(pathname)) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/pdf',
+        headers: {
+          'Content-Disposition': 'attachment; filename="template.pdf"',
+        },
+        body: '%PDF-1.4 mocked',
+      })
+    }
+
+    // GET /contracts/{id}/template
+    if (method === 'GET' && /^\/contracts\/[^/]+\/template$/.test(pathname)) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          template: templates[0],
+          acceptance,
+        }),
+      })
+    }
+
+    // POST /contracts/{id}/accept-template
+    if (method === 'POST' && /^\/contracts\/[^/]+\/accept-template$/.test(pathname)) {
+      const templateId = pathname.split('/')[2]
+      const body = request.postDataJSON() as Record<string, unknown>
+      acceptance = {
+        id: 'acceptance-1',
+        contract_id: templateId,
+        template_id: body?.template_id || templates[0]?.id,
+        accepted_by_role: 'VENUE',
+        accepted_at: new Date().toISOString(),
+        accepted_by_ip: '127.0.0.1',
+        metadata: JSON.stringify(body?.metadata || {}),
+        created_at: new Date().toISOString(),
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(acceptance),
+      })
+    }
+
+    // POST /contracts/{id}/reject-template
+    if (method === 'POST' && /^\/contracts\/[^/]+\/reject-template$/.test(pathname)) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: 'Template rejected' }),
       })
     }
 
@@ -80,7 +243,7 @@ export async function setupContractsMocks(page: Page) {
     }
 
     // POST /contracts/proposals/{id}/accept
-    if (method === 'POST' && url.includes('/accept')) {
+    if (method === 'POST' && /^\/contracts\/proposals\/[^/]+\/accept$/.test(pathname)) {
       const proposalId = url.split('/proposals/')[1]?.split('/accept')[0]
       proposals = proposals.map((p) =>
         p.id === proposalId ? { ...p, status: 'ACCEPTED' } : p
@@ -94,7 +257,7 @@ export async function setupContractsMocks(page: Page) {
     }
 
     // POST /contracts/proposals/{id}/reject
-    if (method === 'POST' && url.includes('/reject')) {
+    if (method === 'POST' && /^\/contracts\/proposals\/[^/]+\/reject$/.test(pathname)) {
       const proposalId = url.split('/proposals/')[1]?.split('/reject')[0]
       proposals = proposals.map((p) =>
         p.id === proposalId ? { ...p, status: 'REJECTED' } : p
@@ -183,10 +346,10 @@ export async function setupContractsMocks(page: Page) {
   })
 
   // Configura localStorage com token e usuário
-  await page.addInitScript((user) => {
+  await page.context().addInitScript((user) => {
     localStorage.setItem('artistlog_token', 'mock-token-test')
     localStorage.setItem('artistlog_user', JSON.stringify(user))
-  }, mockUser)
+  }, currentUser)
 }
 
 /**
@@ -194,9 +357,9 @@ export async function setupContractsMocks(page: Page) {
  * Usa para testes que não precisam de dados completos de contratos
  */
 export async function setupAuthMocks(page: Page) {
-  const API_BASE = 'http://localhost:8080'
-  
-  await page.route(`${API_BASE}/auth/me`, async (route) => {
+  await setupNotificationMocks(page)
+
+  await page.route(/\/auth\/me(?:\?.*)?$/, async (route) => {
     console.log('✅ [MOCK] Intercepted: GET /auth/me')
     await route.fulfill({
       status: 200,
@@ -205,7 +368,7 @@ export async function setupAuthMocks(page: Page) {
     })
   })
 
-  await page.addInitScript((user) => {
+  await page.context().addInitScript((user) => {
     localStorage.setItem('artistlog_token', 'mock-token-test')
     localStorage.setItem('artistlog_user', JSON.stringify(user))
   }, mockUser)
