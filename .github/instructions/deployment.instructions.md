@@ -13,6 +13,8 @@ applyTo: 'vercel.json,next.config.mjs,.env*,DEPLOYMENT.md,VERCEL_DEPLOY.md'
 - Executar frontend localmente: `npm run dev`
 - Usar backend local durante implementação: `NEXT_PUBLIC_API_URL=http://localhost:8080`
 - Só validar em Vercel quando a feature estiver pronta para promoção
+- Estado atual: desenvolvimento contínuo em `development`; promoção futura para `main` apenas após validação completa da feature e readiness para produção
+- Frontend deste repositório sobe na Vercel; a integração de backend continua hospedada no Render
 
 ### Platform: Vercel (Recommended)
 - Framework: Next.js 16 (auto-detected)
@@ -50,9 +52,9 @@ NEXT_PUBLIC_ENABLE_WEBSOCKET=true
 - No custom build commands needed
 
 **next.config.mjs:**
-- `typescript.ignoreBuildErrors: true` - permite deploy com avisos TypeScript
+- TypeScript errors não devem ser ocultados; `npm run type-check` e `npm run build` precisam passar antes do merge/release
 - `images.unoptimized: true` - otimização de imagens desabilitada para Vercel automático
-- Logging reduzido para performance
+- Logging de fetch pode permanecer detalhado para troubleshooting em desenvolvimento
 - Turbopack habilitado
 
 **.env files:**
@@ -135,6 +137,7 @@ Checks:
    - Center opens
    - Unread count
    - Mark as read
+   - Click redirects to the expected route/entity
 
 ### Performance Targets
 
@@ -148,8 +151,8 @@ Checks:
 ### Build Failures
 
 **TypeScript errors:**
-- Already configured: `ignoreBuildErrors: true`
-- If critical: fix in dev, test with `npm run build`
+- Não mascarar erros de tipo
+- Corrigir em `development` e validar com `npm run type-check` + `npm run build` antes de promover para `main`
 
 **Module not found:**
 - Run `npm ci` locally
@@ -205,7 +208,7 @@ cors({
 
 ### Production
 - `main` branch auto-deploys to production
-- Use production backend: `NEXT_PUBLIC_API_URL=https://api.artistlog.com`
+- Use production backend configurado para Render: `NEXT_PUBLIC_API_URL=https://artistlog-backend-latest.onrender.com`
 - Monitor errors in Vercel dashboard
 
 ### Development
