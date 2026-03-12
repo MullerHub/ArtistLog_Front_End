@@ -50,15 +50,18 @@ test.describe('Registration Flow', () => {
   test('should display registration form', async ({ page }) => {
     await page.goto('/register')
 
-    // Check for form elements
-    await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 5000 })
-    await expect(page.locator('input[type="password"]')).toBeVisible({ timeout: 5000 })
-    // Check for artist/venue selection (could be in different formats)
-    const hasSelection = await page.locator('text=/Artista|Venue|Contratante/i').isVisible({ timeout: 2000 }).catch(() => false)
-    if (!hasSelection) {
-      // Check if we at least have the registration page loaded
-      await expect(page).toHaveURL(/\/register/)
+    const emailField = page.locator('input[type="email"]')
+    const passwordField = page.locator('input[type="password"]')
+    const accountTypeStep = page.locator('text=/Sou Artista|Sou Contratante/i').first()
+
+    if (await emailField.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await expect(passwordField).toBeVisible({ timeout: 5000 })
+      return
     }
+
+    // Two-step flow: first select account type.
+    await expect(accountTypeStep).toBeVisible({ timeout: 5000 })
+    await expect(page).toHaveURL(/\/register/)
   })
 
   test('should have link to login', async ({ page }) => {
