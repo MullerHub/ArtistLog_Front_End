@@ -15,6 +15,7 @@ export default defineConfig({
   use: {
     baseURL: e2eBaseURL,
     trace: "on-first-retry",
+    locale: "pt-BR",
   },
   webServer: shouldStartDevServer
     ? {
@@ -28,6 +29,22 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+    },
+    {
+      name: "mobile-chrome",
+      use: { ...devices["Pixel 7"] },
+    },
+    {
+      name: "mobile-safari",
+      use: { ...devices["iPhone 14"] },
     },
   ],
 });
