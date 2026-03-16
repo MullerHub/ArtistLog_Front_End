@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Login Flow", () => {
   test("logs in and reaches dashboard", async ({ page }) => {
-    await page.route("**/auth/login", async (route) => {
+    await page.route("**://localhost:8080/auth/login", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -18,7 +18,7 @@ test.describe("Login Flow", () => {
       });
     });
 
-    await page.route("**/notifications?**", async (route) => {
+    await page.route("**://localhost:8080/notifications?**", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
