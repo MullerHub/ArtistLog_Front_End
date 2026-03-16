@@ -1,5 +1,5 @@
-const LOCAL_API_URL = "http://localhost:8080";
-const RENDER_API_URL = "https://artistlog-backend-latest.onrender.com";
+const LOCAL_API_URL = (import.meta.env.VITE_LOCAL_API_URL || "http://localhost:8080").trim();
+const RENDER_API_URL = (import.meta.env.VITE_PROD_API_FALLBACK_URL || "https://artistlog-backend-latest.onrender.com").trim();
 
 function normalizeBaseUrl(url: string): string {
   return url.replace(/\/+$/, "");
@@ -15,21 +15,19 @@ function isLocalUrl(url: string): boolean {
 
 function resolveApiBaseUrl(): string {
   const envUrl = import.meta.env.VITE_API_URL?.trim();
-  const hasWindow = typeof window !== "undefined";
-  const currentHost = hasWindow ? window.location.hostname : "";
-  const runningLocally = hasWindow && isLocalhostHost(currentHost);
+  const runningInDev = import.meta.env.DEV;
 
   if (envUrl) {
-    if (!runningLocally && hasWindow && isLocalUrl(envUrl)) {
+    if (!runningInDev && isLocalUrl(envUrl)) {
       console.warn(
         `[API] VITE_API_URL (${envUrl}) points to localhost in production. Falling back to ${RENDER_API_URL}.`
       );
-      return RENDER_API_URL;
+      return normalizeBaseUrl(RENDER_API_URL);
     }
     return normalizeBaseUrl(envUrl);
   }
 
-  return runningLocally ? LOCAL_API_URL : RENDER_API_URL;
+  return runningInDev ? normalizeBaseUrl(LOCAL_API_URL) : normalizeBaseUrl(RENDER_API_URL);
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();
@@ -119,8 +117,15 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
       body: rawBody,
     });
   } catch (err) {
+    const target = (() => {
+      try {
+        return new URL(url).origin;
+      } catch {
+        return url;
+      }
+    })();
     const message = isLocalUrl(url)
-      ? `Nao foi possivel conectar ao backend local em ${url}. Verifique se ele esta rodando na porta 8080.`
+      ? `Nao foi possivel conectar ao backend local em ${target}. Verifique se ele esta rodando.`
       : `Falha de rede ao acessar ${endpoint}. Verifique URL da API e configuracao de CORS.`;
     throw new ApiError(message, 0, { cause: err });
   }

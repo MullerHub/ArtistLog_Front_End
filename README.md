@@ -60,6 +60,26 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Environment configuration
+
+This project supports dynamic configuration through environment variables.
+
+1. Copy `.env.example` to `.env.local`.
+2. Fill only the values you need for your environment.
+
+Main variables:
+
+- `VITE_API_URL`: API base URL used by frontend.
+- `VITE_LOCAL_API_URL`: local fallback when `VITE_API_URL` is empty in development.
+- `VITE_PROD_API_FALLBACK_URL`: production fallback when `VITE_API_URL` is empty.
+- `VITE_HOST`, `VITE_PORT`: local Vite dev server host/port.
+
+E2E variables:
+
+- `E2E_BASE_URL`: if set, Playwright uses this URL and does not start `webServer`.
+- `E2E_HOST`, `E2E_PORT`: host/port for local Playwright webServer startup.
+- `E2E_API_URL`: optional API URL used by E2E helper route mocks.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.

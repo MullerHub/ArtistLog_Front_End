@@ -6,6 +6,11 @@ interface SeedUserOptions {
   role?: "ARTIST" | "VENUE";
 }
 
+function resolveNotificationsRoutePattern(): string {
+  const apiBase = (process.env.E2E_API_URL || process.env.VITE_API_URL || "").replace(/\/+$/, "");
+  return apiBase ? `${apiBase}/notifications**` : "**/notifications**";
+}
+
 export async function seedAuthenticatedUser(page: Page, options: SeedUserOptions = {}): Promise<void> {
   const user = {
     id: options.id || "user-e2e-1",
@@ -20,7 +25,7 @@ export async function seedAuthenticatedUser(page: Page, options: SeedUserOptions
 }
 
 export async function mockNotificationFeed(page: Page): Promise<void> {
-  await page.route("**://localhost:8080/notifications**", async (route) => {
+  await page.route(resolveNotificationsRoutePattern(), async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { API_BASE_URL } from "@/lib/api-client";
 import {
   Activity, Server, Clock, User, Wifi, WifiOff, RefreshCw, Zap,
 } from "lucide-react";
@@ -17,13 +18,6 @@ const fadeUp = {
   }),
 };
 
-function getBaseUrl(): string {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl) return envUrl;
-  const isLocalhost = typeof window !== "undefined" && window.location.hostname === "localhost";
-  return isLocalhost ? "http://localhost:8080" : "https://artistlog-backend-latest.onrender.com";
-}
-
 export default function DebugPage() {
   const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
@@ -32,7 +26,7 @@ export default function DebugPage() {
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
   const [checking, setChecking] = useState(false);
 
-  const baseUrl = getBaseUrl();
+  const baseUrl = API_BASE_URL;
   const token = (() => { try { return localStorage.getItem("artistlog_token"); } catch { return null; } })();
 
   const checkHealth = async () => {
@@ -112,7 +106,7 @@ export default function DebugPage() {
               </h3>
               <div className="space-y-2">
                 <InfoRow label={t("debug.baseUrl")} value={baseUrl} />
-                <InfoRow label={t("debug.environment")} value={baseUrl.includes("localhost") ? t("debug.development") : t("debug.production")} />
+                <InfoRow label={t("debug.environment")} value={import.meta.env.DEV ? t("debug.development") : t("debug.production")} />
                 <InfoRow label="VITE_API_URL" value={import.meta.env.VITE_API_URL || "(—)"} />
                 <InfoRow label={t("debug.hostname")} value={typeof window !== "undefined" ? window.location.hostname : "—"} />
               </div>
