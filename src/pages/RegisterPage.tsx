@@ -420,28 +420,6 @@ function VenueSignup({ onBack }: { onBack: () => void }) {
           {errors.infrastructure && <p className="text-xs text-destructive">{errors.infrastructure.message}</p>}
         </div>
 
-<<<<<<< HEAD
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>{t("register.city")} *</Label>
-            <Input placeholder="São Paulo" className="bg-muted/50 border-white/10" {...register("city")} />
-            {errors.city && <p className="text-xs text-destructive">{errors.city.message}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label>{t("register.state")} *</Label>
-            <Select onValueChange={(v) => setValue("state", v)}>
-              <SelectTrigger className="bg-muted/50 border-white/10">
-                <SelectValue placeholder={t("register.select")} />
-              </SelectTrigger>
-              <SelectContent>
-                {BRAZIL_STATES.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.state && <p className="text-xs text-destructive">{errors.state.message}</p>}
-          </div>
-=======
         <div className="space-y-2">
           <CitySearch
             value={venueCity || ""}
@@ -459,7 +437,6 @@ function VenueSignup({ onBack }: { onBack: () => void }) {
           {errors.state && <p className="text-xs text-destructive">{errors.state.message}</p>}
           <input type="hidden" {...register("city")} />
           <input type="hidden" {...register("state")} />
->>>>>>> d12e472 (chore: update RegisterPage.tsx)
         </div>
 
         <Button type="submit" className="w-full" disabled={isSubmitting}>
