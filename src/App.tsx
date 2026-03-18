@@ -1,5 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -38,6 +40,7 @@ const App = () => (
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/signup" element={<RegisterPage />} />
 
               {/* Authenticated shell */}
               <Route element={<ProtectedRoute><AuthenticatedLayout /></ProtectedRoute>}>
@@ -60,6 +63,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
+          <Analytics />
+          <SpeedInsights />
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
