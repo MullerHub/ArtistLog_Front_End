@@ -188,12 +188,6 @@ function ArtistSignup({ onBack }: { onBack: () => void }) {
         cache_base: rest.cache_base!,
         city: rest.city!,
         state: rest.state!,
-        about_me: rest.about_me,
-        phone: rest.phone,
-        whatsapp: rest.whatsapp,
-        tags,
-        genres: tags,
-        event_types: tags,
       });
       toast.success(t("register.success"));
       navigate("/dashboard");
