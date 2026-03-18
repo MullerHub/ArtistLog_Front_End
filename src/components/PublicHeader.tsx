@@ -49,7 +49,7 @@ export function PublicHeader() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-2 md:flex">
-          <LanguageSwitcher />
+          {/* Idioma fixo em português, LanguageSwitcher removido */}
           <Button variant="ghost" asChild>
             <Link to="/login">{t("header.login")}</Link>
           </Button>
@@ -60,7 +60,7 @@ export function PublicHeader() {
 
         {/* Mobile hamburger */}
         <div className="flex items-center gap-2 md:hidden">
-          <LanguageSwitcher />
+          {/* Idioma fixo em português, LanguageSwitcher removido */}
           <button
             className="flex items-center justify-center text-foreground"
             onClick={() => setMobileOpen(!mobileOpen)}
