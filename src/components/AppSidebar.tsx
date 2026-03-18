@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Calendar, FileText, Star, Music, Building2,
   Settings, Moon, Sun, LogOut,
@@ -141,8 +142,8 @@ export function AppSidebar() {
             title="Acessar meu perfil público"
           >
             <Avatar className="h-9 w-9 shrink-0">
-              {user?.profile_photo && (
-                <AvatarImage src={resolvePhotoUrl(user.profile_photo)} alt={user.email} className="object-cover" />
+              {fetchedPhoto && (
+                <AvatarImage src={resolvePhotoUrl(fetchedPhoto)} alt={user?.email} className="object-cover" />
               )}
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                 {initials}
