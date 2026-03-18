@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { motion } from "framer-motion";
 import { Flag, Building2, MapPin, Users, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { resolvePhotoUrl } from "@/lib/utils";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -68,7 +69,7 @@ export default function VenueClaimPage() {
                   <div className="glass rounded-xl p-4 flex items-center gap-4">
                     <div className="h-16 w-16 rounded-lg overflow-hidden bg-muted shrink-0">
                       {venue.profile_photo ? (
-                        <img src={venue.profile_photo} alt={venue.venue_name} className="h-full w-full object-cover" />
+                        <img src={resolvePhotoUrl(venue.profile_photo)} alt={venue.venue_name} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center"><Building2 className="h-6 w-6 text-muted-foreground" /></div>
                       )}
