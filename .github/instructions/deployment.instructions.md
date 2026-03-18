@@ -7,6 +7,15 @@ applyTo: 'vercel.json,next.config.mjs,.env*,DEPLOYMENT.md,VERCEL_DEPLOY.md'
 
 ## Production Environment
 
+## Local Development Policy
+
+- Branch de trabalho: `development` (ou branches derivadas dela)
+- Executar frontend localmente: `npm run dev`
+- Usar backend local durante implementação: `NEXT_PUBLIC_API_URL=http://localhost:8080`
+- Só validar em Vercel quando a feature estiver pronta para promoção
+- Estado atual: desenvolvimento contínuo em `development`; promoção futura para `main` apenas após validação completa da feature e readiness para produção
+- Frontend deste repositório sobe na Vercel; a integração de backend continua hospedada no Render
+
 ### Platform: Vercel (Recommended)
 - Framework: Next.js 16 (auto-detected)
 - Build Command: `npm run build` (automatic)
@@ -17,8 +26,15 @@ applyTo: 'vercel.json,next.config.mjs,.env*,DEPLOYMENT.md,VERCEL_DEPLOY.md'
 
 **Production (OBRIGATÓRIO):**
 ```bash
-NEXT_PUBLIC_API_URL=https://seu-backend.vercel.app
+NEXT_PUBLIC_API_URL=https://artistlog-backend-latest.onrender.com
 ```
+(Nota: Frontend tem fallback automático se esta var não estiver definida)
+
+**Backend (Render) - OBRIGATÓRIO:**
+```bash
+CORS_ALLOWED_ORIGINS=https://artist-log-front-end.vercel.app
+```
+(Sem localhost em produção. Deve retornar single `Access-Control-Allow-Origin` header)
 
 **Optional (have defaults):**
 ```bash
@@ -36,9 +52,9 @@ NEXT_PUBLIC_ENABLE_WEBSOCKET=true
 - No custom build commands needed
 
 **next.config.mjs:**
-- `typescript.ignoreBuildErrors: true` - permite deploy com avisos TypeScript
+- TypeScript errors não devem ser ocultados; `npm run type-check` e `npm run build` precisam passar antes do merge/release
 - `images.unoptimized: true` - otimização de imagens desabilitada para Vercel automático
-- Logging reduzido para performance
+- Logging de fetch pode permanecer detalhado para troubleshooting em desenvolvimento
 - Turbopack habilitado
 
 **.env files:**
@@ -72,9 +88,16 @@ vercel --prod
 
 ### Automatic Deploys
 
-- **Production**: Push to `main` branch
-- **Preview**: Every PR creates preview deployment
-- **Branch Deploys**: All branches get preview URLs
+- **Development flow**: trabalhar em `development` e branches derivadas (`feature/*`, `fix/*`)
+- **Production**: apenas merge aprovado para `main`
+- **Preview**: PRs geram preview deployment para validação
+
+### Branch Policy (Team)
+
+1. Base de trabalho: `development`
+2. Implementação: `feature/*` ou `fix/*` a partir de `development`
+3. Integração: PR para `development`
+4. Release: PR de `development` para `main` apenas quando estiver pronto para produção
 
 ## Pre-Deploy Validation
 
@@ -114,6 +137,7 @@ Checks:
    - Center opens
    - Unread count
    - Mark as read
+   - Click redirects to the expected route/entity
 
 ### Performance Targets
 
@@ -127,8 +151,8 @@ Checks:
 ### Build Failures
 
 **TypeScript errors:**
-- Already configured: `ignoreBuildErrors: true`
-- If critical: fix in dev, test with `npm run build`
+- Não mascarar erros de tipo
+- Corrigir em `development` e validar com `npm run type-check` + `npm run build` antes de promover para `main`
 
 **Module not found:**
 - Run `npm ci` locally
@@ -184,7 +208,7 @@ cors({
 
 ### Production
 - `main` branch auto-deploys to production
-- Use production backend: `NEXT_PUBLIC_API_URL=https://api.artistlog.com`
+- Use production backend configurado para Render: `NEXT_PUBLIC_API_URL=https://artistlog-backend-latest.onrender.com`
 - Monitor errors in Vercel dashboard
 
 ### Development

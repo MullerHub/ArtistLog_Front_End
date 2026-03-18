@@ -7,7 +7,25 @@ applyTo: 'lib/**,lib/services/**,hooks/**'
 
 ## Base URL and Auth
 
-- Base URL: `NEXT_PUBLIC_API_URL` (fallback `http://localhost:8080`)
+### Base URL Resolution (Smart Fallback)
+Implementado em `lib/api-client.ts` > `resolveApiBaseUrl()`:
+
+1. **Se `NEXT_PUBLIC_API_URL` está definido:**
+   - E frontend rode em `localhost` → usa como-é (útil para dev local)
+   - E frontend rode em produção (Vercel) + aponta para `localhost` → fallback para Render
+   - E frontend rode em produção + aponta para URL válida → usa como-é ✅
+
+2. **Se `NEXT_PUBLIC_API_URL` não definido:**
+   - Frontend em `localhost` → fallback para `http://localhost:8080`
+   - Frontend em produção (Vercel) → fallback para `https://artistlog-backend-latest.onrender.com` ✅
+
+**Importante:** Em produção na Vercel, se `NEXT_PUBLIC_API_URL` não estiver configurada ou apontar para `localhost`, o frontend automaticamente cai no fallback Render. Isso protege contra misconfigurações.
+
+### Produção Current (Mar/2026)
+- **Frontend URL:** `https://artist-log-front-end.vercel.app`
+- **Backend URL:** `https://artistlog-backend-latest.onrender.com`
+- **CORS (Backend):** `Access-Control-Allow-Origin: https://artist-log-front-end.vercel.app` (single origin)
+
 - Auth header: `Authorization: Bearer <token>`
 - Token storage: `localStorage['artistlog_token']`
 - User cache: `localStorage['artistlog_user']`
@@ -20,11 +38,28 @@ applyTo: 'lib/**,lib/services/**,hooks/**'
 
 ## Endpoints Used by the Frontend
 
-### Auth
-- `POST /auth/login`
-- `POST /auth/signup/artist`
-- `POST /auth/signup/venue`
-- `GET /auth/me`
+### Públicos (sem autenticação)
+- `GET /health` — Healthcheck
+- `GET /ready` — Readiness check
+- `POST /auth/signup/artist` — Cadastro artista
+- `POST /auth/signup/venue` — Cadastro venue
+- `POST /auth/login` — Login
+- `POST /auth/forgot-password` — Solicitar recuperação de senha
+- `POST /auth/reset-password` — Redefinir senha
+- `GET /cities/search` — Busca cidades
+- `POST /cities/reload` — Recarrega cache cidades
+- `POST /cities/update` — Atualiza municípios
+- `GET /artists` — Lista artistas (com filtros)
+- `GET /artists/{id}` — Perfil público artista
+- `POST /artists/{id}/view` — Incrementa views artista (silencioso)
+- `GET /venues` — Lista venues (com filtros)
+- `GET /venues/{id}` — Perfil público venue
+- `POST /venues/{id}/view` — Incrementa views venue (silencioso)
+- `GET /venues/{id}/reviews` — Reviews de venue
+
+### Autenticados (JWT)
+- `GET /auth/me` — Dados do usuário autenticado
+- `PATCH /auth/change-password` — Troca senha
 
 ### Artists
 - `GET /artists`
@@ -59,6 +94,10 @@ applyTo: 'lib/**,lib/services/**,hooks/**'
 - `GET /venues/claim-candidates`
 - `POST /venues/{id}/claim`
 
+### Location
+- `GET /cities/search`
+- `PATCH /me/location`
+
 ### Contracts (Core)
 - `POST /contracts`
 - `GET /contracts`
@@ -83,10 +122,12 @@ applyTo: 'lib/**,lib/services/**,hooks/**'
 - `GET /contracts/{contractId}/audit/logs`
 - `GET /contracts/audit/user`
 
-### Contracts (Signature)
-- `POST /contracts/send-for-signature`
-- `GET /contracts/{contractId}/signature-status`
-- `POST /webhooks/signature-completed` (webhook externo, não chamado diretamente no frontend)
+### Contracts (Templates)
+- `POST /contracts/templates` (multipart/form-data: `file`, `template_name`, `description`)
+- `GET /contracts/templates/my` (query opcional: `include_inactive=true`)
+- `GET /contracts/{id}/template`
+- `POST /contracts/{id}/accept-template`
+- `POST /contracts/{id}/reject-template`
 
 ### Notifications
 - `GET /notifications`
@@ -97,10 +138,18 @@ applyTo: 'lib/**,lib/services/**,hooks/**'
 - `PATCH /notifications/preferences`
 - `POST /notifications/test`
 
-### Location / City / Upload
-- `GET /cities/search`
-- `PATCH /me/location`
+**Frontend expectation for notification payloads:**
+- Base fields já usados: `id`, `type`, `title`, `message`, `is_read`, `created_at`
+- Navegação contextual deve preferir `action_url` quando o backend enviar
+- Para navegação por entidade, backend pode enviar `related_entity_id` + `related_entity_type`
+- `metadata` opcional é suportado no frontend para futuros casos (`venue_id`, `contract_id`, `artist_id`, etc.)
+- Caso prioritário atual: `community_venue_created` com `related_entity_id` deve abrir `/venues/{id}`
+
+### Upload
 - `POST /upload/photo`
+
+### WebSocket
+- `GET /ws` — Notificações em tempo real (autenticado)
 
 ### External APIs (frontend)
 - Nominatim: `GET https://nominatim.openstreetmap.org/search`

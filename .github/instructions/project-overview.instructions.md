@@ -90,9 +90,9 @@ Autenticado:
 
 ## UX Areas Ativas
 
-- Community Venues: criação, busca e claim
+- Community Venues: criação, busca, claim e navegação para detalhe da venue criada
 - Contract Proposal: detalhes adicionais e tags
-- Notification Center: leitura e preferências
+- Notification Center: leitura, preferências e redirecionamento por entidade/tipo
 - Contracts Workspace: tabs de Detalhes, Propostas, Chat, Auditoria e Assinatura
 - Artist/Venue Location: base location + exact location (map + persistência)
 
@@ -129,25 +129,55 @@ Ver: `.github/instructions/contracts.instructions.md` para detalhes
   - `contracts-real.spec.ts` (backend real com dados seed/mockados no backend)
 - Para mobile, os testes devem usar seletores estáveis (`data-testid`) em vez de labels visíveis.
 - Cache de sessão E2E implementado em arquivo temporário para evitar rate limit do backend
+- Notificações agora têm resolução centralizada de destino em `lib/notification-routing.ts`
+- Clique em notificação deve priorizar `action_url`, depois `related_entity_*`, depois fallback por tipo
+- Caso atual prioritário: `community_venue_created` deve levar para `/venues/{id}` quando houver `related_entity_id`
+- O frontend já possui tipos planejados para roadmap de notificações, mesmo quando o backend ainda não os emite
 
 ## Deploy e Produção
 
-### Status: ✅ Pronto para Vercel
+### Workflow de Branches (Obrigatório)
+- Desenvolvimento diário: `development`
+- Features/correções: criar branch a partir de `development` (`feature/*`, `fix/*`)
+- `main` fica reservado para release estável e deploy de produção
+- Só promover para `main` quando a entrega estiver validada (tests + revisão)
+- Estado atual do trabalho: continuar implementando e validando em `development`; promoção futura para `main` somente quando a entrega frontend estiver pronta para produção e integrada ao backend no Render
+
+### Modo Desenvolvimento Local (Obrigatório durante implementação)
+- Frontend local: `npm run dev`
+- Backend local: `http://localhost:8080`
+- Arquivo local: `.env.local` com `NEXT_PUBLIC_API_URL=http://localhost:8080`
+- Evitar desenvolver apontando para backend de produção
+
+### Status: ✅ Ativo em Produção (Vercel)
+- Frontend: `https://artist-log-front-end.vercel.app` (Vercel)
+- Backend: `https://artistlog-backend-latest.onrender.com` (Render)
 - Build validado: `npm run build` funciona
 - Configuração: `vercel.json` com headers de segurança
-- Variável obrigatória: `NEXT_PUBLIC_API_URL` (backend URL)
-- Script de validação: `./pre-deploy-check.sh`
+- API conectada: ✅ CORS corrigido (single origin)
+- TypeScript sem supressão de erros: `npm run type-check` e `npm run build` devem permanecer verdes antes de promover para `main`
 
-### Quick Deploy
-1. Conectar repo no Vercel: https://vercel.com/new
-2. Configurar `NEXT_PUBLIC_API_URL` em Environment Variables
-3. Deploy automático em ~2-3 min
+### API Base URL Resolution
+`lib/api-client.ts` implementa fallback inteligente:
+```
+Production (Vercel) sem NEXT_PUBLIC_API_URL? → https://artistlog-backend-latest.onrender.com
+Development (localhost)? → http://localhost:8080
+```
+
+### Variáveis de Ambiente
+**Produção (Render):** Env var `CORS_ALLOWED_ORIGINS` deve ter apenas `Vercel domain`
+```
+CORS_ALLOWED_ORIGINS=https://artist-log-front-end.vercel.app
+```
+
+**Frontend (Vercel):**
+```
+NEXT_PUBLIC_API_URL=https://artistlog-backend-latest.onrender.com
+```
 
 ### Docs de Deploy
-- **Quick Start:** `VERCEL_DEPLOY.md` (3 passos)
-- **Guia Completo:** `DEPLOYMENT.md`
-- **Checklist:** `DEPLOY_CHECKLIST.md`
-- **Instruções Contextuais:** `.github/instructions/deployment.instructions.md`
+- **Deployment:** `.github/instructions/deployment.instructions.md`
+- **API Health:** `/debug/health` (verificar conectividade no frontend)
 
 ## Próximas Features (Contexto para Desenvolvimento)
 

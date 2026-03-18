@@ -1,50 +1,50 @@
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from "@playwright/test";
 
-/**
- * Playwright Configuration for End-to-End Testing
- * https://playwright.dev/docs/intro
- */
+const e2eHost = process.env.E2E_HOST || "127.0.0.1";
+const e2ePort = Number(process.env.E2E_PORT || "5173");
+const resolvedPort = Number.isNaN(e2ePort) ? 5173 : e2ePort;
+const e2eBaseURL = process.env.E2E_BASE_URL || `http://${e2eHost}:${resolvedPort}`;
+const shouldStartDevServer = !process.env.E2E_BASE_URL;
+
 export default defineConfig({
-  testDir: './e2e',
-  fullyParallel: true,
-  forbidOnly: !!process.env.CI,
+  testDir: "./e2e",
+  fullyParallel: false,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  workers: process.env.CI ? 1 : 1,
+  reporter: "list",
   use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    baseURL: e2eBaseURL,
+    trace: "on-first-retry",
+    locale: "pt-BR",
   },
-
+  webServer: shouldStartDevServer
+    ? {
+      command: `npm run dev -- --host ${e2eHost} --port ${resolvedPort}`,
+      url: e2eBaseURL,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    }
+    : undefined,
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
-
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
     },
-
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
-
-    /* Test against mobile viewports. */
     {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      name: "mobile-chrome",
+      use: { ...devices["Pixel 7"] },
+    },
+    {
+      name: "mobile-safari",
+      use: { ...devices["iPhone 14"] },
     },
   ],
-
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: `NEXT_PUBLIC_API_URL=${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8080'} npm run dev:turbo`,
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
-})
+});
