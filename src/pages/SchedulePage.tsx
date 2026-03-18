@@ -52,9 +52,14 @@ export default function SchedulePage() {
   }, [data]);
 
   const addSlotMutation = useMutation({
-    mutationFn: (payload: { day_of_week: number; start_time: string; end_time: string }) => schedulesService.addSlot(payload),
+    mutationFn: (payload: { day_of_week: number; start_time: string; end_time: string }) => schedulesService.addSlot(payload, user!.id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["schedule", "me"] });
+      toast.success("Slot adicionado!");
+    },
+    onError: () => {
+      toast.error("Erro ao salvar slot. Verifique se o backend está rodando.");
+      queryClient.invalidateQueries({ queryKey: ["schedule", "me"] });
     },
   });
 
@@ -62,6 +67,11 @@ export default function SchedulePage() {
     mutationFn: (slotId: string) => schedulesService.removeSlot(slotId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["schedule", "me"] });
+      toast.success("Slot removido.");
+    },
+    onError: () => {
+      toast.error("Erro ao remover slot.");
+      queryClient.invalidateQueries({ queryKey: ["schedule", "me"] });
     },
   });
 
@@ -69,6 +79,9 @@ export default function SchedulePage() {
     mutationFn: (payload: { min_slot_duration_hours: number }) => schedulesService.updateSettings(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["schedule", "me"] });
+    },
+    onError: () => {
+      toast.error("Erro ao salvar configurações.");
     },
   });
 
@@ -111,32 +124,20 @@ export default function SchedulePage() {
     }
 
     if (editingSlot.id) {
-      toast.info("Edicao de slot ainda depende do endpoint de update. Exclua e crie novamente.");
+      toast.info("Edição de slot: exclua e crie novamente.");
     } else {
-      const newSlot: ScheduleSlot = {
-        id: `s${Date.now()}`,
+      addSlotMutation.mutate({
         day_of_week: editingSlot.day_of_week!,
         start_time: editingSlot.start_time!,
         end_time: editingSlot.end_time!,
-        is_available: editingSlot.is_available ?? true,
-        label: editingSlot.label || undefined,
-      };
-      setSlots((s) => [...s, newSlot]);
-      addSlotMutation.mutate({
-        day_of_week: newSlot.day_of_week,
-        start_time: newSlot.start_time,
-        end_time: newSlot.end_time,
       });
-      toast.success("Slot adicionado!");
     }
     setShowSlotDialog(false);
     setEditingSlot(null);
   };
 
   const deleteSlot = (id: string) => {
-    setSlots((s) => s.filter((x) => x.id !== id));
     removeSlotMutation.mutate(id);
-    toast.success("Slot removido.");
   };
 
   return (
