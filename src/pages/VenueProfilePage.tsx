@@ -289,9 +289,6 @@ export default function VenueProfilePage() {
         <DialogContent className="max-w-3xl p-0 bg-background/95 backdrop-blur-xl border-border overflow-hidden">
           <div className="relative">
             <img src={resolvePhotoUrl(venue.photo_urls[lightboxIndex])} alt={`Foto ${lightboxIndex + 1}`} className="w-full max-h-[80vh] object-contain" />
-            <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => setLightboxOpen(false)}>
-              <X className="h-5 w-5" />
-            </Button>
             {venue.photo_urls.length > 1 && (
               <>
                 <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2" onClick={prevPhoto}><ChevronLeft className="h-5 w-5" /></Button>
