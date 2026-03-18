@@ -54,8 +54,8 @@
     "config": "Config"
   },
   "header": {
-    "login": "Entrar",
-    "register": "Cadastrar"
+    "login": "Login",
+    "register": "Registro"
   },
   "theme": {
     "light": "Modo claro",
@@ -64,8 +64,7 @@
   "language": {
     "title": "Idioma",
     "ptBR": "Português",
-    "en": "English",
-    "es": "Español"
+    "en": "English"
   },
   "landing": {
     "badge": "A única plataforma B2B para Artistas e Contratantes no Brasil",
@@ -160,9 +159,12 @@
     "aboutYouPlaceholder": "Conte um pouco sobre sua carreira...",
     "baseFee": "Cachê base (R$)",
     "city": "Cidade",
+    "citySearchLabel": "Cidade (comece a digitar para buscar)",
+    "citySearchPlaceholder": "Digite o nome da cidade...",
     "state": "Estado",
     "select": "Selecione",
     "tagsGenres": "Tags / Gêneros",
+    "tagsPlaceholder": "Ex: DJ, Rock, Casamento",
     "phone": "Telefone",
     "whatsapp": "WhatsApp",
     "capacity": "Capacidade",
