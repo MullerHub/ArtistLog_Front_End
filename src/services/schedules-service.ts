@@ -26,30 +26,61 @@ function normalizeSlot(raw: any): ScheduleSlot {
 
 export const schedulesService = {
   async getMySchedule(): Promise<{ slots: ScheduleSlot[]; settings: ScheduleSettings }> {
-    const response = await apiClient.get<ScheduleResponse>("/artists/me/schedule");
-
-    return {
-      slots: (response.slots || []).map(normalizeSlot),
-      settings: {
-        advance_booking_days: 30,
-        min_slot_duration_hours: response.min_gig_duration || 2,
-        auto_accept: false,
-      },
-    };
+    try {
+      const response = await apiClient.get<ScheduleResponse>("/artists/me/schedule");
+      return {
+        slots: (response.slots || []).map(normalizeSlot),
+        settings: {
+          advance_booking_days: 30,
+          min_slot_duration_hours: response.min_gig_duration || 2,
+          auto_accept: false,
+        },
+      };
+    } catch (err: any) {
+      if (err?.status === 404) {
+        return { slots: [], settings: { advance_booking_days: 30, min_slot_duration_hours: 2, auto_accept: false } };
+      }
+      throw err;
+    }
   },
 
   async getArtistSchedule(artistId: string): Promise<ScheduleSlot[]> {
-    const response = await apiClient.get<ScheduleResponse>(`/artists/${artistId}/schedule`);
-    return (response.slots || []).map(normalizeSlot);
+    try {
+      const response = await apiClient.get<ScheduleResponse>(`/artists/${artistId}/schedule`);
+      return (response.slots || []).map(normalizeSlot);
+    } catch (err: any) {
+      if (err?.status === 404) return [];
+      throw err;
+    }
   },
 
-  async addSlot(payload: {
-    day_of_week: number;
-    start_time: string;
-    end_time: string;
-  }): Promise<ScheduleSlot> {
-    const slot = await apiClient.post<any>("/artists/me/schedule/slots", payload);
-    return normalizeSlot(slot);
+  async ensureScheduleExists(artistId: string): Promise<void> {
+    try {
+      await apiClient.get<ScheduleResponse>("/artists/me/schedule");
+    } catch (err: any) {
+      if (err?.status === 404) {
+        await apiClient.post(`/artists/${artistId}/schedule`, { min_gig_duration: 60 });
+      } else {
+        throw err;
+      }
+    }
+  },
+
+  async addSlot(
+    payload: { day_of_week: number; start_time: string; end_time: string },
+    artistId: string
+  ): Promise<ScheduleSlot> {
+    try {
+      const slot = await apiClient.post<any>("/artists/me/schedule/slots", payload);
+      return normalizeSlot(slot);
+    } catch (err: any) {
+      if (err?.status === 404) {
+        await apiClient.post(`/artists/${artistId}/schedule`, { min_gig_duration: 60 });
+        const slot = await apiClient.post<any>("/artists/me/schedule/slots", payload);
+        return normalizeSlot(slot);
+      }
+      throw err;
+    }
   },
 
   async removeSlot(slotId: string): Promise<void> {
