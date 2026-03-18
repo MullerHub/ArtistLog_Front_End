@@ -21,6 +21,11 @@ export interface Venue {
   is_claimed: boolean;
   owner_id?: string;
   created_at: string;
+  // Preferences
+  email_notifications?: boolean;
+  push_notifications?: boolean;
+  auto_accept?: boolean;
+  is_public?: boolean;
 }
 
 export interface Review {

@@ -20,6 +20,11 @@ export interface Artist {
   review_count: number;
   is_available: boolean;
   created_at: string;
+  // Preferences
+  email_notifications?: boolean;
+  push_notifications?: boolean;
+  auto_accept?: boolean;
+  is_public?: boolean;
 }
 
 export interface ArtistFilters {
