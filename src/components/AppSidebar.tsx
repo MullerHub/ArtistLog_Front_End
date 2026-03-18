@@ -11,8 +11,9 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar, SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { resolvePhotoUrl } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { titleKey: "nav.dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -32,13 +33,47 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const [fetchedPhoto, setFetchedPhoto] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    if (user.profile_photo) {
+      setFetchedPhoto(user.profile_photo);
+      return;
+    }
+    
+    // Fallback fetch if auth/me does not include profile_photo
+    const fetchPhoto = async () => {
+      try {
+        if (user.role === "ARTIST") {
+          const { artistsService } = await import("@/services/artists-service");
+          const data = await artistsService.getById(user.id);
+          setFetchedPhoto(data.profile_photo || (data.photo_urls?.[0]) || null);
+        } else if (user.role === "VENUE") {
+          const { venuesService } = await import("@/services/venues-service");
+          const data = await venuesService.getById(user.id);
+          setFetchedPhoto(data.profile_photo || (data.photo_urls?.[0]) || null);
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+    fetchPhoto();
+  }, [user]);
+
   const initials = user?.email?.slice(0, 2).toUpperCase() || "?";
   const roleLabel = user?.role === "ARTIST" ? t("common.artist") : user?.role === "VENUE" ? t("common.venue") : "—";
+  const userProfileUrl = user?.role === "ARTIST" ? `/artists/${user.id}` : user?.role === "VENUE" ? `/venues/${user.id}` : "/dashboard";
 
   const expandSidebar = () => {
     if (collapsed) {
       setOpen(true);
     }
+  };
+
+  const handleProfileClick = () => {
+    expandSidebar();
+    navigate(userProfileUrl);
   };
 
   return (
@@ -101,10 +136,14 @@ export function AppSidebar() {
           {/* User info */}
           <button
             type="button"
-            onClick={expandSidebar}
-            className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left hover:bg-sidebar-accent/50"
+            onClick={handleProfileClick}
+            className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left hover:bg-sidebar-accent/50 transition-colors"
+            title="Acessar meu perfil público"
           >
             <Avatar className="h-9 w-9 shrink-0">
+              {user?.profile_photo && (
+                <AvatarImage src={resolvePhotoUrl(user.profile_photo)} alt={user.email} className="object-cover" />
+              )}
               <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                 {initials}
               </AvatarFallback>
