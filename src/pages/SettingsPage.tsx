@@ -1,8 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { InternalHeader } from "@/components/InternalHeader";
+import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/contexts/AuthContext";
 import { GENRES, EVENT_TYPES } from "@/types/artist";
 import { BRAZIL_STATES } from "@/lib/brazil-states";
+import { artistsService } from "@/services/artists-service";
+import { venuesService } from "@/services/venues-service";
+import type { Artist } from "@/types/artist";
+import type { Venue } from "@/types/venue";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -15,7 +20,7 @@ import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import {
   User, Camera, Upload, X, Star, MapPin, Phone, Globe,
-  Save, Trash2, Image as ImageIcon,
+  Save, Trash2, Image as ImageIcon, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -70,24 +75,95 @@ export default function SettingsPage() {
 }
 
 function ArtistProfileForm() {
-  const [stageName, setStageName] = useState("Lucas Harmonia");
-  const [bio, setBio] = useState("Cantor e violonista com mais de 10 anos de experiência em eventos.");
-  const [aboutMe, setAboutMe] = useState("Sou apaixonado por música desde criança...");
-  const [phone, setPhone] = useState("(11) 99999-1234");
-  const [whatsapp, setWhatsapp] = useState("(11) 99999-1234");
-  const [website, setWebsite] = useState("https://lucasharmonia.com");
-  const [city, setCity] = useState("São Paulo");
-  const [state, setState] = useState("SP");
-  const [cacheBase, setCacheBase] = useState("1500");
-  const [genres, setGenres] = useState<string[]>(["MPB", "Sertanejo", "Pop"]);
-  const [eventTypes, setEventTypes] = useState<string[]>(["Casamento", "Corporativo", "Bar/Pub"]);
+  const { user, refreshUser } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [artistData, setArtistData] = useState<Artist | null>(null);
+
+  const [stageName, setStageName] = useState("");
+  const [bio, setBio] = useState("");
+  const [aboutMe, setAboutMe] = useState("");
+  const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [website, setWebsite] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [cacheBase, setCacheBase] = useState("");
+  const [genres, setGenres] = useState<string[]>([]);
+  const [eventTypes, setEventTypes] = useState<string[]>([]);
+
+  // Fetch artist data on mount
+  useEffect(() => {
+    const fetchArtist = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const data = await artistsService.getById(user.id);
+        setArtistData(data);
+        setStageName(data.stage_name || "");
+        setBio(data.bio || "");
+        setAboutMe(data.about_me || "");
+        setPhone(data.phone || "");
+        setWhatsapp(data.whatsapp || "");
+        setWebsite(data.website || "");
+        setCity(data.city || "");
+        setState(data.state || "");
+        setCacheBase(data.cache_base?.toString() || "");
+        setGenres(data.genres || []);
+        setEventTypes(data.event_types || []);
+      } catch {
+        toast.error("Erro ao carregar dados do perfil.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchArtist();
+  }, [user?.id]);
 
   const toggleGenre = (g: string) =>
     setGenres((prev) => prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]);
   const toggleEventType = (e: string) =>
     setEventTypes((prev) => prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]);
 
-  const save = () => toast.success("Perfil atualizado com sucesso!");
+  const save = async () => {
+    if (!user?.id) return;
+    setIsSaving(true);
+    try {
+      await apiClient.patch(`/artists/${user.id}`, {
+        stage_name: stageName,
+        bio,
+        about_me: aboutMe,
+        phone,
+        whatsapp,
+        website,
+        city,
+        state,
+        cache_base: parseFloat(cacheBase) || 0,
+        genres,
+        event_types: eventTypes,
+      });
+      await refreshUser();
+      toast.success("Perfil atualizado com sucesso!");
+    } catch {
+      toast.error("Erro ao atualizar perfil.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
+        <div className="glass rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
@@ -161,24 +237,94 @@ function ArtistProfileForm() {
           </div>
         </div>
 
-        <Button className="w-full sm:w-auto" onClick={save}><Save className="h-4 w-4 mr-1" /> Salvar alterações</Button>
+        <Button className="w-full sm:w-auto" onClick={save} disabled={isSaving}>
+          {isSaving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+          Salvar alterações
+        </Button>
       </div>
     </motion.div>
   );
 }
 
 function VenueProfileForm() {
-  const [name, setName] = useState("Bar do Blues");
-  const [description, setDescription] = useState("Casa noturna referência em blues e jazz ao vivo.");
-  const [infrastructure, setInfrastructure] = useState("Palco 4x3m, PA 2000W...");
-  const [capacity, setCapacity] = useState("200");
-  const [address, setAddress] = useState("Rua Augusta, 1234 - Consolação");
-  const [city, setCity] = useState("São Paulo");
-  const [state, setState] = useState("SP");
-  const [phone, setPhone] = useState("(11) 3333-4444");
-  const [website, setWebsite] = useState("https://bardoblues.com");
+  const { user, refreshUser } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [venueData, setVenueData] = useState<Venue | null>(null);
 
-  const save = () => toast.success("Perfil atualizado com sucesso!");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [infrastructure, setInfrastructure] = useState("");
+  const [capacity, setCapacity] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [phone, setPhone] = useState("");
+  const [website, setWebsite] = useState("");
+
+  // Fetch venue data on mount
+  useEffect(() => {
+    const fetchVenue = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const data = await venuesService.getById(user.id);
+        setVenueData(data);
+        setName(data.venue_name || "");
+        setDescription(data.description || "");
+        setInfrastructure(data.infrastructure || "");
+        setCapacity(data.capacity?.toString() || "");
+        setAddress(data.address || "");
+        setCity(data.city || "");
+        setState(data.state || "");
+        setPhone(data.phone || "");
+        setWebsite(data.website || "");
+      } catch {
+        toast.error("Erro ao carregar dados do perfil.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchVenue();
+  }, [user?.id]);
+
+  const save = async () => {
+    if (!user?.id) return;
+    setIsSaving(true);
+    try {
+      await apiClient.patch(`/venues/${user.id}`, {
+        venue_name: name,
+        description,
+        infrastructure,
+        capacity: parseInt(capacity) || 0,
+        address,
+        city,
+        state,
+        phone,
+        website,
+      });
+      await refreshUser();
+      toast.success("Perfil atualizado com sucesso!");
+    } catch {
+      toast.error("Erro ao atualizar perfil.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
+        <div className="glass rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
@@ -234,23 +380,49 @@ function VenueProfileForm() {
           <Textarea className="mt-1" value={infrastructure} onChange={(e) => setInfrastructure(e.target.value)} rows={3} />
         </div>
 
-        <Button className="w-full sm:w-auto" onClick={save}><Save className="h-4 w-4 mr-1" /> Salvar alterações</Button>
+        <Button className="w-full sm:w-auto" onClick={save} disabled={isSaving}>
+          {isSaving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+          Salvar alterações
+        </Button>
       </div>
     </motion.div>
   );
 }
 
 function PhotosManager() {
+  const { user, refreshUser } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [photos, setPhotos] = useState<string[]>([
-    "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600",
-    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600",
-  ]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [mainPhoto, setMainPhoto] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleFiles = (files: FileList | null) => {
+  // Fetch photos on mount
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        if (user.role === "ARTIST") {
+          const data = await artistsService.getById(user.id);
+          setPhotos(data.photo_urls || []);
+        } else {
+          const data = await venuesService.getById(user.id);
+          setPhotos(data.photo_urls || []);
+        }
+      } catch {
+        toast.error("Erro ao carregar fotos.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPhotos();
+  }, [user?.id, user?.role]);
+
+  const handleFiles = async (files: FileList | null) => {
     if (!files || uploading) return;
     const file = files[0];
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -265,27 +437,79 @@ function PhotosManager() {
     setUploading(true);
     setUploadProgress(0);
 
-    const interval = setInterval(() => {
-      setUploadProgress((p) => {
-        if (p >= 100) {
-          clearInterval(interval);
-          const url = URL.createObjectURL(file);
-          setPhotos((prev) => [...prev, url]);
-          setUploading(false);
-          toast.success("Foto adicionada!");
-          return 0;
-        }
-        return p + 20;
-      });
-    }, 200);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Upload with progress simulation
+      const interval = setInterval(() => {
+        setUploadProgress((p) => Math.min(p + 20, 90));
+      }, 200);
+
+      const response = await apiClient.upload<{ url: string }>("/upload/photo", formData);
+
+      clearInterval(interval);
+      setUploadProgress(100);
+
+      if (response?.url) {
+        setPhotos((prev) => [...prev, response.url]);
+        toast.success("Foto adicionada!");
+      }
+    } catch {
+      toast.error("Erro ao enviar foto.");
+    } finally {
+      setTimeout(() => {
+        setUploading(false);
+        setUploadProgress(0);
+      }, 500);
+    }
   };
 
-  const removePhoto = (i: number) => {
-    setPhotos((prev) => prev.filter((_, idx) => idx !== i));
-    if (mainPhoto === i) setMainPhoto(0);
-    else if (mainPhoto > i) setMainPhoto((m) => m - 1);
-    toast.success("Foto removida.");
+  const removePhoto = async (i: number) => {
+    if (!user?.id) return;
+    const newPhotos = photos.filter((_, idx) => idx !== i);
+    try {
+      if (user.role === "ARTIST") {
+        await apiClient.patch(`/artists/${user.id}`, { photo_urls: newPhotos });
+      } else {
+        await apiClient.patch(`/venues/${user.id}`, { photo_urls: newPhotos });
+      }
+      setPhotos(newPhotos);
+      if (mainPhoto === i) setMainPhoto(0);
+      else if (mainPhoto > i) setMainPhoto((m) => m - 1);
+      toast.success("Foto removida.");
+    } catch {
+      toast.error("Erro ao remover foto.");
+    }
   };
+
+  const setMainPhotoApi = async (i: number) => {
+    if (!user?.id) return;
+    try {
+      if (user.role === "ARTIST") {
+        await apiClient.patch(`/artists/${user.id}`, { profile_photo: photos[i] });
+      } else {
+        await apiClient.patch(`/venues/${user.id}`, { profile_photo: photos[i] });
+      }
+      setMainPhoto(i);
+      await refreshUser();
+      toast.success("Foto principal definida!");
+    } catch {
+      toast.error("Erro ao definir foto principal.");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
+        <div className="glass rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
@@ -328,7 +552,7 @@ function PhotosManager() {
                     variant={mainPhoto === i ? "default" : "outline"}
                     size="sm"
                     className="text-xs"
-                    onClick={() => { setMainPhoto(i); toast.success("Foto principal definida!"); }}
+                    onClick={() => setMainPhotoApi(i)}
                   >
                     <Star className="h-3 w-3 mr-1" />
                     {mainPhoto === i ? "Principal" : "Definir"}
@@ -352,12 +576,79 @@ function PhotosManager() {
 }
 
 function PreferencesForm() {
+  const { user, refreshUser } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [emailNotif, setEmailNotif] = useState(true);
   const [pushNotif, setPushNotif] = useState(false);
   const [autoAccept, setAutoAccept] = useState(false);
   const [publicProfile, setPublicProfile] = useState(true);
 
-  const save = () => toast.success("Preferências salvas!");
+  // Fetch preferences on mount
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        if (user.role === "ARTIST") {
+          const data = await artistsService.getById(user.id);
+          setEmailNotif(data.email_notifications ?? true);
+          setPushNotif(data.push_notifications ?? false);
+          setAutoAccept(data.auto_accept ?? false);
+          setPublicProfile(data.is_public ?? true);
+        } else {
+          const data = await venuesService.getById(user.id);
+          setEmailNotif(data.email_notifications ?? true);
+          setPushNotif(data.push_notifications ?? false);
+          setAutoAccept(data.auto_accept ?? false);
+          setPublicProfile(data.is_public ?? true);
+        }
+      } catch {
+        toast.error("Erro ao carregar preferências.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPreferences();
+  }, [user?.id, user?.role]);
+
+  const save = async () => {
+    if (!user?.id) return;
+    setIsSaving(true);
+    try {
+      const payload = {
+        email_notifications: emailNotif,
+        push_notifications: pushNotif,
+        auto_accept: autoAccept,
+        is_public: publicProfile,
+      };
+      if (user.role === "ARTIST") {
+        await apiClient.patch(`/artists/${user.id}`, payload);
+      } else {
+        await apiClient.patch(`/venues/${user.id}`, payload);
+      }
+      await refreshUser();
+      toast.success("Preferências salvas!");
+    } catch {
+      toast.error("Erro ao salvar preferências.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
+        <div className="glass rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}>
@@ -383,7 +674,10 @@ function PreferencesForm() {
           </div>
         </div>
 
-        <Button className="w-full sm:w-auto" onClick={save}><Save className="h-4 w-4 mr-1" /> Salvar preferências</Button>
+        <Button className="w-full sm:w-auto" onClick={save} disabled={isSaving}>
+          {isSaving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+          Salvar preferências
+        </Button>
       </div>
     </motion.div>
   );
