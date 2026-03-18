@@ -1,3 +1,5 @@
+// Componente removido: sistema agora é apenas em português.
+// Componente removido: sistema agora é apenas em português.
 import { Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -11,12 +13,13 @@ import {
 const LANGUAGES = [
   { code: "pt-BR", label: "🇧🇷 Português", short: "PT" },
   { code: "en", label: "🇺🇸 English", short: "EN" },
-  { code: "es", label: "🇪🇸 Español", short: "ES" },
 ];
 
 export function LanguageSwitcher({ variant = "ghost" }: { variant?: "ghost" | "outline" }) {
   const { i18n } = useTranslation();
-  const current = LANGUAGES.find((l) => l.code === i18n.language) || LANGUAGES[0];
+  const activeLanguage = String(i18n.resolvedLanguage || i18n.language || "pt-BR");
+  const isActiveLanguage = (code: string) => activeLanguage === code || activeLanguage.startsWith(`${code}-`);
+  const current = LANGUAGES.find((l) => isActiveLanguage(l.code)) || LANGUAGES[0];
 
   return (
     <DropdownMenu>
@@ -30,7 +33,7 @@ export function LanguageSwitcher({ variant = "ghost" }: { variant?: "ghost" | "o
           <DropdownMenuItem
             key={lang.code}
             onClick={() => i18n.changeLanguage(lang.code)}
-            className={`cursor-pointer ${i18n.language === lang.code ? "bg-accent font-medium" : ""}`}
+            className={`cursor-pointer ${isActiveLanguage(lang.code) ? "bg-accent font-medium" : ""}`}
           >
             {lang.label}
           </DropdownMenuItem>
