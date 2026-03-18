@@ -3,6 +3,7 @@ import { Star, MapPin, Music } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
+import { resolvePhotoUrl } from "@/lib/utils";
 
 interface ArtistCardProps {
   artist: Artist;
@@ -21,7 +22,7 @@ export function ArtistCard({ artist }: ArtistCardProps) {
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {artist.profile_photo ? (
           <img
-            src={artist.profile_photo}
+            src={resolvePhotoUrl(artist.profile_photo)}
             alt={artist.stage_name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
