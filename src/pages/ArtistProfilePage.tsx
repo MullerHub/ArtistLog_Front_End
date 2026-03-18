@@ -327,14 +327,6 @@ export default function ArtistProfilePage() {
               alt={`${artist.stage_name} foto ${lightboxIndex + 1}`}
               className="w-full max-h-[80vh] object-contain"
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2"
-              onClick={() => setLightboxOpen(false)}
-            >
-              <X className="h-5 w-5" />
-            </Button>
             {artist.photo_urls.length > 1 && (
               <>
                 <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2" onClick={prevPhoto}>
