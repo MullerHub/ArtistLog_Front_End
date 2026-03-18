@@ -1,93 +1,49 @@
-# Welcome to your Lovable project
+# ArtistLog Frontend
 
-## Project info
+Aplicacao frontend do ArtistLog, plataforma para conexao entre artistas e contratantes.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
+## Stack
 
 - Vite
 - TypeScript
 - React
-- shadcn-ui
 - Tailwind CSS
+- shadcn/ui
 
-## Environment configuration
+## Requisitos
 
-This project supports dynamic configuration through environment variables.
+- Node.js 18+
+- npm
 
-1. Copy `.env.example` to `.env.local`.
-2. Fill only the values you need for your environment.
+## Setup local
 
-Main variables:
+```sh
+npm install
+npm run dev
+```
 
-- `VITE_API_URL`: API base URL used by frontend.
-- `VITE_LOCAL_API_URL`: local fallback when `VITE_API_URL` is empty in development.
-- `VITE_PROD_API_FALLBACK_URL`: production fallback when `VITE_API_URL` is empty.
-- `VITE_HOST`, `VITE_PORT`: local Vite dev server host/port.
+## Scripts
 
-E2E variables:
+- `npm run dev`: inicia ambiente de desenvolvimento
+- `npm run build`: gera build de producao
+- `npm run preview`: sobe build local para validacao
+- `npm run test`: roda testes unitarios
+- `npm run test:e2e`: roda testes E2E com Playwright
 
-- `E2E_BASE_URL`: if set, Playwright uses this URL and does not start `webServer`.
-- `E2E_HOST`, `E2E_PORT`: host/port for local Playwright webServer startup.
-- `E2E_API_URL`: optional API URL used by E2E helper route mocks.
+## Variaveis de ambiente
 
-## How can I deploy this project?
+1. Copie `.env.example` para `.env.local`.
+2. Preencha apenas o necessario para seu ambiente.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Principais variaveis:
 
-## Can I connect a custom domain to my Lovable project?
+- `VITE_API_URL`: URL base da API.
+- `VITE_LOCAL_API_URL`: fallback local quando `VITE_API_URL` estiver vazio em desenvolvimento.
+- `VITE_PROD_API_FALLBACK_URL`: fallback de producao quando `VITE_API_URL` estiver vazio.
+- `VITE_HOST`, `VITE_PORT`: host/porta do Vite local.
 
-Yes, you can!
+Variaveis de E2E:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- `E2E_BASE_URL`: se definido, o Playwright usa essa URL e nao sobe `webServer`.
+- `E2E_HOST`, `E2E_PORT`: host/porta para subir o frontend em testes E2E.
+- `E2E_API_URL`: URL opcional para mocks/helpers de API em E2E.
