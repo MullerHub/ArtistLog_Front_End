@@ -45,9 +45,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarContent>
         {/* Logo + Collapse trigger */}
-        <div className="flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-heading font-bold text-sm">
+        <div className="flex flex-col items-center px-4 py-4 relative">
+          <div className="flex items-center gap-2 w-full justify-between">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-heading font-bold text-base">
               A
             </div>
             {!collapsed && (
@@ -55,8 +55,20 @@ export function AppSidebar() {
                 ArtistLog
               </span>
             )}
+            <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
           </div>
-          <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+          {collapsed && (
+            <button
+              type="button"
+              aria-label="Expandir menu"
+              title="Expandir menu"
+              onClick={() => setOpen(true)}
+              className="mt-4 rounded p-1 bg-background border border-border shadow text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50 transition-colors"
+              style={{ boxShadow: '0 2px 8px 0 rgba(0,0,0,0.08)' }}
+            >
+              <svg width="22" height="22" fill="none" viewBox="0 0 20 20"><path d="M7 5l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          )}
         </div>
 
         <SidebarGroup>
