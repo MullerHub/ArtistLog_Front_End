@@ -3,6 +3,7 @@ import { Star, MapPin, Users, Building2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
+import { resolvePhotoUrl } from "@/lib/utils";
 
 interface VenueCardProps {
   venue: Venue;
@@ -20,7 +21,7 @@ export function VenueCard({ venue }: VenueCardProps) {
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {venue.profile_photo ? (
           <img
-            src={venue.profile_photo}
+            src={resolvePhotoUrl(venue.profile_photo)}
             alt={venue.venue_name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
