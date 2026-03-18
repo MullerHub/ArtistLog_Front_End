@@ -5,6 +5,7 @@ import { DAYS_OF_WEEK } from "@/types/artist";
 import { useAuth } from "@/contexts/AuthContext";
 import { artistsService } from "@/services/artists-service";
 import { schedulesService } from "@/services/schedules-service";
+import { resolvePhotoUrl } from "@/lib/utils";
 import { InternalHeader } from "@/components/InternalHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,14 @@ import {
   Star, MapPin, Phone, Globe, MessageCircle, Mail, Music, ChevronLeft, ChevronRight,
   Calendar, X, Edit, ExternalLink,
 } from "lucide-react";
+
+// Helper to ensure URL has protocol
+function ensureProtocol(url: string): string {
+  if (!url) return url;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `https://${url}`;
+}
+
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -99,7 +108,7 @@ export default function ArtistProfilePage() {
               <div className="relative h-48 md:h-64 bg-muted overflow-hidden">
                 {artist.profile_photo ? (
                   <img
-                    src={artist.profile_photo}
+                    src={resolvePhotoUrl(artist.profile_photo)}
                     alt={artist.stage_name}
                     className="h-full w-full object-cover"
                   />
@@ -208,7 +217,7 @@ export default function ArtistProfilePage() {
                       onClick={() => openLightbox(i)}
                       className="aspect-square rounded-lg overflow-hidden bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <img src={url} alt={`${artist.stage_name} foto ${i + 1}`} className="h-full w-full object-cover hover:scale-105 transition-transform duration-300" loading="lazy" />
+                      <img src={resolvePhotoUrl(url)} alt={`${artist.stage_name} foto ${i + 1}`} className="h-full w-full object-cover hover:scale-105 transition-transform duration-300" loading="lazy" />
                     </button>
                   ))}
                 </div>
@@ -244,7 +253,7 @@ export default function ArtistProfilePage() {
                 {artist.website && (
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Website</p>
-                    <a href={artist.website} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                    <a href={ensureProtocol(artist.website)} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
                       <Globe className="h-3.5 w-3.5" />
                       {artist.website.replace(/^https?:\/\//, "")}
                     </a>
@@ -254,7 +263,7 @@ export default function ArtistProfilePage() {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">SoundCloud</p>
                     {artist.soundcloud_links.map((link, i) => (
-                      <a key={i} href={link} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                      <a key={i} href={ensureProtocol(link)} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
                         <ExternalLink className="h-3.5 w-3.5" /> Ouvir
                       </a>
                     ))}
@@ -314,7 +323,7 @@ export default function ArtistProfilePage() {
         <DialogContent className="max-w-3xl p-0 bg-background/95 backdrop-blur-xl border-border overflow-hidden">
           <div className="relative">
             <img
-              src={artist.photo_urls[lightboxIndex]}
+              src={resolvePhotoUrl(artist.photo_urls[lightboxIndex])}
               alt={`${artist.stage_name} foto ${lightboxIndex + 1}`}
               className="w-full max-h-[80vh] object-contain"
             />
