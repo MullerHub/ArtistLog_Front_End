@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { venuesService } from "@/services/venues-service";
+import { resolvePhotoUrl } from "@/lib/utils";
 import { InternalHeader } from "@/components/InternalHeader";
 import { MapView } from "@/components/MapView";
 import { ReviewCard } from "@/components/ReviewCard";
@@ -114,7 +115,7 @@ export default function VenueProfilePage() {
             <div className="glass rounded-2xl overflow-hidden">
               <div className="relative h-48 md:h-64 bg-muted overflow-hidden">
                 {venue.profile_photo ? (
-                  <img src={venue.profile_photo} alt={venue.venue_name} className="h-full w-full object-cover" />
+                  <img src={resolvePhotoUrl(venue.profile_photo)} alt={venue.venue_name} className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
                     <Building2 className="h-16 w-16 text-muted-foreground" />
@@ -193,7 +194,7 @@ export default function VenueProfilePage() {
                       onClick={() => openLightbox(i)}
                       className="aspect-square rounded-lg overflow-hidden bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <img src={url} alt={`${venue.venue_name} foto ${i + 1}`} className="h-full w-full object-cover hover:scale-105 transition-transform duration-300" loading="lazy" />
+                      <img src={resolvePhotoUrl(url)} alt={`${venue.venue_name} foto ${i + 1}`} className="h-full w-full object-cover hover:scale-105 transition-transform duration-300" loading="lazy" />
                     </button>
                   ))}
                 </div>
@@ -287,7 +288,7 @@ export default function VenueProfilePage() {
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-3xl p-0 bg-background/95 backdrop-blur-xl border-border overflow-hidden">
           <div className="relative">
-            <img src={venue.photo_urls[lightboxIndex]} alt={`Foto ${lightboxIndex + 1}`} className="w-full max-h-[80vh] object-contain" />
+            <img src={resolvePhotoUrl(venue.photo_urls[lightboxIndex])} alt={`Foto ${lightboxIndex + 1}`} className="w-full max-h-[80vh] object-contain" />
             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => setLightboxOpen(false)}>
               <X className="h-5 w-5" />
             </Button>
