@@ -38,11 +38,28 @@ Implementado em `lib/api-client.ts` > `resolveApiBaseUrl()`:
 
 ## Endpoints Used by the Frontend
 
-### Auth
-- `POST /auth/login`
-- `POST /auth/signup/artist`
-- `POST /auth/signup/venue`
-- `GET /auth/me`
+### Públicos (sem autenticação)
+- `GET /health` — Healthcheck
+- `GET /ready` — Readiness check
+- `POST /auth/signup/artist` — Cadastro artista
+- `POST /auth/signup/venue` — Cadastro venue
+- `POST /auth/login` — Login
+- `POST /auth/forgot-password` — Solicitar recuperação de senha
+- `POST /auth/reset-password` — Redefinir senha
+- `GET /cities/search` — Busca cidades
+- `POST /cities/reload` — Recarrega cache cidades
+- `POST /cities/update` — Atualiza municípios
+- `GET /artists` — Lista artistas (com filtros)
+- `GET /artists/{id}` — Perfil público artista
+- `POST /artists/{id}/view` — Incrementa views artista (silencioso)
+- `GET /venues` — Lista venues (com filtros)
+- `GET /venues/{id}` — Perfil público venue
+- `POST /venues/{id}/view` — Incrementa views venue (silencioso)
+- `GET /venues/{id}/reviews` — Reviews de venue
+
+### Autenticados (JWT)
+- `GET /auth/me` — Dados do usuário autenticado
+- `PATCH /auth/change-password` — Troca senha
 
 ### Artists
 - `GET /artists`
@@ -77,6 +94,10 @@ Implementado em `lib/api-client.ts` > `resolveApiBaseUrl()`:
 - `GET /venues/claim-candidates`
 - `POST /venues/{id}/claim`
 
+### Location
+- `GET /cities/search`
+- `PATCH /me/location`
+
 ### Contracts (Core)
 - `POST /contracts`
 - `GET /contracts`
@@ -101,7 +122,7 @@ Implementado em `lib/api-client.ts` > `resolveApiBaseUrl()`:
 - `GET /contracts/{contractId}/audit/logs`
 - `GET /contracts/audit/user`
 
-### Contracts (Templates Locais)
+### Contracts (Templates)
 - `POST /contracts/templates` (multipart/form-data: `file`, `template_name`, `description`)
 - `GET /contracts/templates/my` (query opcional: `include_inactive=true`)
 - `GET /contracts/{id}/template`
@@ -118,16 +139,17 @@ Implementado em `lib/api-client.ts` > `resolveApiBaseUrl()`:
 - `POST /notifications/test`
 
 **Frontend expectation for notification payloads:**
-- Base fields already usados: `id`, `type`, `title`, `message`, `is_read`, `created_at`
+- Base fields já usados: `id`, `type`, `title`, `message`, `is_read`, `created_at`
 - Navegação contextual deve preferir `action_url` quando o backend enviar
 - Para navegação por entidade, backend pode enviar `related_entity_id` + `related_entity_type`
 - `metadata` opcional é suportado no frontend para futuros casos (`venue_id`, `contract_id`, `artist_id`, etc.)
 - Caso prioritário atual: `community_venue_created` com `related_entity_id` deve abrir `/venues/{id}`
 
-### Location / City / Upload
-- `GET /cities/search`
-- `PATCH /me/location`
+### Upload
 - `POST /upload/photo`
+
+### WebSocket
+- `GET /ws` — Notificações em tempo real (autenticado)
 
 ### External APIs (frontend)
 - Nominatim: `GET https://nominatim.openstreetmap.org/search`
