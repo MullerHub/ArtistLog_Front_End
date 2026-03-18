@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { InternalHeader } from "@/components/InternalHeader";
 import { apiClient } from "@/lib/api-client";
+import { resolvePhotoUrl } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { GENRES, EVENT_TYPES } from "@/types/artist";
-import { BRAZIL_STATES } from "@/lib/brazil-states";
 import { artistsService } from "@/services/artists-service";
 import { venuesService } from "@/services/venues-service";
+import { citiesService, type City } from "@/services/cities-service";
 import type { Artist } from "@/types/artist";
 import type { Venue } from "@/types/venue";
 import { Input } from "@/components/ui/input";
@@ -14,13 +15,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import {
-  User, Camera, Upload, X, Star, MapPin, Phone, Globe,
-  Save, Trash2, Image as ImageIcon, Loader2,
+  User, Camera, Upload, Star, MapPin,
+  Save, Trash2, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,8 +32,80 @@ const fadeUp = {
   }),
 };
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+// City Search Component
+function CitySearch({ value, onChange, placeholder = "Digite para buscar cidade..." }: { value: City | null; onChange: (city: City) => void; placeholder?: string }) {
+  const [search, setSearch] = useState(value ? `${value.nome} - ${value.uf}` : "");
+  const [results, setResults] = useState<City[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (value) {
+      setSearch(`${value.nome} - ${value.uf}`);
+    }
+  }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearch(value);
+    if (value.length >= 2) {
+      citiesService.search(value)
+        .then((data) => {
+          setResults(data);
+        })
+        .catch((err) => {
+          console.error("[CitySearch] Error:", err);
+          setResults([]);
+        });
+      setShowDropdown(true);
+    } else {
+      setResults([]);
+      setShowDropdown(false);
+    }
+  };
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <Input
+        className="mt-1"
+        value={search}
+        onChange={handleSearchChange}
+        onFocus={() => search.length >= 2 && setShowDropdown(true)}
+        placeholder={placeholder}
+      />
+      {showDropdown && results.length > 0 && (
+        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+          {results.map((c) => (
+            <button
+              key={`${c.nome}-${c.uf}`}
+              className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+              onClick={() => {
+                onChange(c);
+                setSearch(`${c.nome} - ${c.uf}`);
+                setShowDropdown(false);
+              }}
+            >
+              {c.nome} - {c.uf}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -86,13 +158,11 @@ function ArtistProfileForm() {
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [website, setWebsite] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
+  const [city, setCity] = useState<City | null>(null);
   const [cacheBase, setCacheBase] = useState("");
   const [genres, setGenres] = useState<string[]>([]);
   const [eventTypes, setEventTypes] = useState<string[]>([]);
 
-  // Fetch artist data on mount
   useEffect(() => {
     const fetchArtist = async () => {
       if (!user?.id) {
@@ -108,8 +178,9 @@ function ArtistProfileForm() {
         setPhone(data.phone || "");
         setWhatsapp(data.whatsapp || "");
         setWebsite(data.website || "");
-        setCity(data.city || "");
-        setState(data.state || "");
+        if (data.city && data.state) {
+          setCity({ id: "", nome: data.city, estado: data.state, uf: data.state });
+        }
         setCacheBase(data.cache_base?.toString() || "");
         setGenres(data.genres || []);
         setEventTypes(data.event_types || []);
@@ -138,8 +209,8 @@ function ArtistProfileForm() {
         phone,
         whatsapp,
         website,
-        city,
-        state,
+        city: city?.nome || "",
+        state: city?.uf || "",
         cache_base: parseFloat(cacheBase) || 0,
         genres,
         event_types: eventTypes,
@@ -183,16 +254,7 @@ function ArtistProfileForm() {
           </div>
           <div>
             <Label className="text-xs">Cidade</Label>
-            <Input className="mt-1" value={city} onChange={(e) => setCity(e.target.value)} />
-          </div>
-          <div>
-            <Label className="text-xs">Estado</Label>
-            <Select value={state} onValueChange={setState}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {BRAZIL_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <CitySearch value={city} onChange={setCity} />
           </div>
           <div>
             <Label className="text-xs">Telefone</Label>
@@ -257,12 +319,11 @@ function VenueProfileForm() {
   const [infrastructure, setInfrastructure] = useState("");
   const [capacity, setCapacity] = useState("");
   const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
+  const [city, setCity] = useState<City | null>(null);
   const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [website, setWebsite] = useState("");
 
-  // Fetch venue data on mount
   useEffect(() => {
     const fetchVenue = async () => {
       if (!user?.id) {
@@ -277,9 +338,11 @@ function VenueProfileForm() {
         setInfrastructure(data.infrastructure || "");
         setCapacity(data.capacity?.toString() || "");
         setAddress(data.address || "");
-        setCity(data.city || "");
-        setState(data.state || "");
+        if (data.city && data.state) {
+          setCity({ id: "", nome: data.city, estado: data.state, uf: data.state });
+        }
         setPhone(data.phone || "");
+        setWhatsapp(data.whatsapp || "");
         setWebsite(data.website || "");
       } catch {
         toast.error("Erro ao carregar dados do perfil.");
@@ -300,9 +363,10 @@ function VenueProfileForm() {
         infrastructure,
         capacity: parseInt(capacity) || 0,
         address,
-        city,
-        state,
+        city: city?.nome || "",
+        state: city?.uf || "",
         phone,
+        whatsapp,
         website,
       });
       await refreshUser();
@@ -344,20 +408,15 @@ function VenueProfileForm() {
           </div>
           <div>
             <Label className="text-xs">Cidade</Label>
-            <Input className="mt-1" value={city} onChange={(e) => setCity(e.target.value)} />
-          </div>
-          <div>
-            <Label className="text-xs">Estado</Label>
-            <Select value={state} onValueChange={setState}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {BRAZIL_STATES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <CitySearch value={city} onChange={setCity} />
           </div>
           <div>
             <Label className="text-xs">Telefone</Label>
             <Input className="mt-1" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">WhatsApp</Label>
+            <Input className="mt-1" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
           </div>
           <div>
             <Label className="text-xs">Website</Label>
@@ -398,7 +457,6 @@ function PhotosManager() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Fetch photos on mount
   useEffect(() => {
     const fetchPhotos = async () => {
       if (!user?.id) {
@@ -425,6 +483,7 @@ function PhotosManager() {
   const handleFiles = async (files: FileList | null) => {
     if (!files || uploading) return;
     const file = files[0];
+    
     if (!ALLOWED_TYPES.includes(file.type)) {
       toast.error("Formato não suportado. Use JPEG, PNG ou WebP.");
       return;
@@ -441,19 +500,30 @@ function PhotosManager() {
       const formData = new FormData();
       formData.append("file", file);
 
-      // Upload with progress simulation
       const interval = setInterval(() => {
         setUploadProgress((p) => Math.min(p + 20, 90));
       }, 200);
 
-      const response = await apiClient.upload<{ url: string }>("/upload/photo", formData);
+      const response = await apiClient.upload<{ file_url: string }>("/upload/photo", formData);
 
       clearInterval(interval);
       setUploadProgress(100);
 
-      if (response?.url) {
-        setPhotos((prev) => [...prev, response.url]);
-        toast.success("Foto adicionada!");
+      if (response?.file_url) {
+        const newPhotos = [...photos, response.file_url];
+        
+        if (user?.id) {
+          try {
+            const endpoint = user.role === "ARTIST" ? `/artists/${user.id}` : `/venues/${user.id}`;
+            await apiClient.patch(endpoint, { photo_urls: newPhotos });
+            setPhotos(newPhotos);
+            toast.success("Foto adicionada!");
+          } catch {
+            toast.error("Erro ao salvar foto no perfil.");
+          }
+        }
+      } else {
+        toast.error("Erro: resposta do servidor sem URL.");
       }
     } catch {
       toast.error("Erro ao enviar foto.");
@@ -518,7 +588,6 @@ function PhotosManager() {
           <Camera className="h-4 w-4 text-primary" /> Fotos
         </h3>
 
-        {/* Upload area */}
         <div
           onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
           onDrop={(e) => { e.preventDefault(); handleFiles(e.dataTransfer.files); }}
@@ -541,12 +610,15 @@ function PhotosManager() {
           )}
         </div>
 
-        {/* Grid */}
         {photos.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {photos.map((url, i) => (
               <div key={i} className="relative group aspect-square rounded-lg overflow-hidden bg-muted">
-                <img src={url} alt={`Foto ${i + 1}`} className="h-full w-full object-cover" />
+                <img
+                  src={resolvePhotoUrl(url)}
+                  alt={`Foto ${i + 1}`}
+                  className="h-full w-full object-cover"
+                />
                 <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <Button
                     variant={mainPhoto === i ? "default" : "outline"}
@@ -584,7 +656,6 @@ function PreferencesForm() {
   const [autoAccept, setAutoAccept] = useState(false);
   const [publicProfile, setPublicProfile] = useState(true);
 
-  // Fetch preferences on mount
   useEffect(() => {
     const fetchPreferences = async () => {
       if (!user?.id) {
